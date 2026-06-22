@@ -151,7 +151,7 @@ Guide: [installing new disks](https://www.tecmint.com/add-new-disk-to-an-existin
 #### Files
 
 ```tree
-dmhome/
+dmhosted-infra/
 ├── ansible.cfg                 # Contains the ansible configuration & defaults
 ├── collections/
 │   └── requirements.yml        # Contains required collections
