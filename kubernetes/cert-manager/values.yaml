@@ -1,0 +1,7 @@
+namespace: "cert-manager"
+crds:
+  enabled: true
+replicaCount: 1
+extraArgs: # Use cloudflare and quad-9 for DNS-01 challenge (skips local DNS)
+  - --dns01-recursive-nameservers=1.1.1.1:53,9.9.9.9:53
+  - --dns01-recursive-nameservers-only

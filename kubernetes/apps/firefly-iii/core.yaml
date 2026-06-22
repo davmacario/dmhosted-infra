@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: firefly-iii
+  namespace: firefly-iii
+  labels:
+    app: firefly-iii
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+  selector:
+    app: firefly-iii-core
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: firefly-iii-env
+  namespace: firefly-iii
+  labels:
+    app: firefly-iii
+data:
+  APP_ENV: production
+  APP_DEBUG: "false"
+  SITE_OWNER: dav.macario@gmail.com
+  DEFAULT_LANGUAGE: en_US
+  DEFAULT_LOCALE: equal
+  TZ: Europe/Amsterdam
+  TRUSTED_PROXIES: "**"
+  LOG_CHANNEL: stack
+  APP_LOG_LEVEL: notice
+  AUDIT_LOG_LEVEL: emergency
+  DB_CONNECTION: pgsql
+  DB_HOST: firefly-iii-db-rw
+  DB_PORT: "5432"
+  DB_DATABASE: firefly
+  PGSQL_SCHEMA: public
+  APP_URL: https://firefly-iii.internal.dmhosted.com
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: firefly-iii-uploads
+  namespace: firefly-iii
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: firefly-iii-core
+  namespace: firefly-iii
+  labels:
+    app: firefly-iii-core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: firefly-iii-core
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 3
+  template:
+    metadata:
+      labels:
+        app: firefly-iii-core
+    spec:
+      automountServiceAccountToken: false
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        searches:
+          - firefly-iii.svc.cluster.local
+      containers:
+        - name: firefly-iii-core
+          image: fireflyiii/core:version-6.4.15
+          env:
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: firefly-iii-app-db-secret
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: firefly-iii-app-db-secret
+                  key: password
+          envFrom:
+            - configMapRef:
+                name: firefly-iii-env
+            - secretRef:
+                name: firefly-iii-app-key
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 600m
+              memory: 512Mi
+          volumeMounts:
+            - mountPath: /var/www/html/storage/upload
+              name: uploads
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: firefly-iii-uploads

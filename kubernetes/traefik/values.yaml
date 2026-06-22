@@ -1,0 +1,68 @@
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+additionalArguments:
+  - "--serversTransport.insecureSkipVerify=true"
+  - "--log.level=INFO"
+
+deployment:
+  enabled: true
+  replicas: 2
+  annotations: {}
+  podAnnotations: {}
+  additionalContainers: []
+  initContainers: []
+  podLabels: # Primary Traefik instance
+    app: traefik
+    instance: primary
+
+resources:
+  limits:
+    cpu: "250m"
+    memory: "256Mi"
+  requests:
+    cpu: "50m"
+    memory: "32Mi"
+
+ports:
+  web:
+    port: 80
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    port: 443
+    http:
+      tls:
+        enabled: true
+
+api:
+  dashboard: true
+  insecure: true
+
+ingressRoute:
+  dashboard:
+    enabled: false
+
+providers:
+  kubernetesCRD:
+    enabled: true
+  kubernetesIngress:
+    enabled: true
+
+rbac:
+  enabled: true
+
+service:
+  enabled: true
+  type: LoadBalancer
+  annotations: {}
+  labels: {}
+  spec:
+    loadBalancerIP: 192.168.178.20 # In MetalLB range
+  loadBalancerSourceRanges: []
+  externalIPs: []

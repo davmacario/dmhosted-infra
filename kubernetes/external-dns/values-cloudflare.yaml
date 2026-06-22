@@ -1,0 +1,33 @@
+provider:
+  name: cloudflare
+policy: sync
+sources:
+  - service
+  - ingress
+  - crd
+  - traefik-proxy
+crd:
+  create: false
+  apiversion: traefik.io/v1alpha1
+  kind: IngressRoute
+env:
+  - name: CF_API_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: cloudflare-api-key
+        key: apiKey
+domainFilters:
+  - dmhosted.com
+cloudflare:
+  proxied: true
+txtOwnerId: "k3s-cluster"
+
+rbac:
+  create: true
+
+clusterRole: true
+
+# This is the key to allow multiple external-dns instances.
+# Only Ingress[Route] resources with this annotation will be targeted by the
+# current instance of Helm.
+annotationFilter: "external-dns.alpha.kubernetes.io/provider=cloudflare"

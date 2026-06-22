@@ -1,0 +1,209 @@
+# Custom values for kube-prometheus-stack (v 82.13.1)
+nameOverride: ""
+
+prometheusOperator:
+  enabled: true
+  fullnameOverride: "prometheus-operator"
+
+  resources:
+    limits:
+      cpu: 300m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+  prometheusConfigReloader:
+    resources:
+      limits:
+        cpu: 200m
+        memory: 200Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+
+  admissionWebhooks:
+    deployment:
+      resources:
+        limits:
+          cpu: 200m
+          memory: 200Mi
+        requests:
+          cpu: 100m
+          memory: 100Mi
+    patch:
+      resources:
+        limits:
+          cpu: 200m
+          memory: 200Mi
+        requests:
+          cpu: 100m
+          memory: 100Mi
+
+prometheus:
+  additionalLabels:
+    app: prometheus
+  fullnameOverride: "prometheus"
+  prometheusSpec:
+    scrapeInterval: 30s # default
+    # How long to retain metrics (and max size)
+    retention: 15d
+    retentionSize: 40GiB
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1024Mi
+      requests:
+        cpu: 300m
+        memory: 512Mi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn-data-local
+          resources:
+            requests:
+              storage: 50Gi
+  ingress:
+    enabled: false
+
+# NOTE: `resources:` not explicitly mentioned in default values, but can be set
+# see https://github.com/prometheus-community/helm-charts/issues/4692
+prometheus-node-exporter:
+  fullnameOverride: "node-exporter"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 50Mi
+    limits:
+      cpu: 100m
+      memory: 100Mi
+  prometheus:
+    monitor:
+      enabled: true
+      interval: "30s"
+
+kube-state-metrics:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 100Mi
+    limits:
+      cpu: 200m
+      memory: 150Mi
+
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    secrets: # mounted at /etc/alertmanager/secrets/<secret_name>/<key>
+      - telegram-bot-secret
+    configMaps: # mounted at /etc/alertmanager/configmaps/
+      - telegram-message-template
+    resources:
+      requests:
+        cpu: 100m
+        memory: 200Mi
+      limits:
+        cpu: 500m
+        memory: 400Mi
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn-data-local
+          resources:
+            requests:
+              storage: 2Gi
+
+  # Root config
+  config:
+    global:
+      resolve_timeout: 5m
+      # TODO: smtp_auth_password_file
+    receivers:
+      - name: "null"
+      - name: "telegram-bot"
+        telegram_configs:
+          - send_resolved: true
+            api_url: "https://api.telegram.org"
+            bot_token_file: "/etc/alertmanager/secrets/telegram-bot-secret/token"
+            chat_id_file: "/etc/alertmanager/secrets/telegram-bot-secret/chat_id"
+            message: '{{ template "telegram.default.message" . }}'
+
+    route:
+      group_by:
+        - alertname
+        - namespace
+      group_interval: 5m
+      group_wait: 30s
+      receiver: "null"
+      repeat_interval: 12h
+      routes:
+        - receiver: telegram-bot
+          matchers: # For testing
+            - alertname = "Watchdog"
+        - receiver: telegram-bot
+          matchers: # Only forward alerts that are critical/warnings
+            - severity =~ "critical|warning|error"
+
+    templates:
+      - /etc/alertmanager/configmaps/telegram-message-template/*.tmpl
+
+grafana:
+  enabled: true
+  fullnameOverride: "grafana"
+  deploymentStrategy:
+    type: Recreate
+    rollingUpdate: null
+  defaultDashboardsTimezone: Europe/Amsterdam
+  admin:
+    existingSecret: grafana-admin-secret
+    userKey: user
+    passwordKey: password
+  service: # Default, but putting it here to prevent changes (for ingressroute)
+    name: prometheus-stack-grafana
+    type: ClusterIP
+    port: 80
+  persistence:
+    enabled: true
+    storageClassName: longhorn-data-local
+    size: 5Gi
+  ingress:
+    enabled: false # Using IngressRoute (traefik)
+
+# Fix for firing alerts
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+defaultRules:
+  create: true
+  rules:
+    alertmanager: true
+    etcd: true
+    configReloaders: true
+    general: true
+    k8s: true
+    kubeApiserverAvailability: true
+    kubeApiserverBurnrate: true
+    kubeApiserverHistogram: true
+    kubeApiserverSlos: true
+    kubeControllerManager: false
+    kubelet: true
+    kubeProxy: true
+    kubePrometheusGeneral: true
+    kubePrometheusNodeRecording: true
+    kubernetesApps: true
+    kubernetesResources: true
+    kubernetesStorage: true
+    kubernetesSystem: true
+    kubeSchedulerAlerting: false
+    kubeSchedulerRecording: false
+    kubeStateMetrics: true
+    network: true
+    node: true
+    nodeExporterAlerting: true
+    nodeExporterRecording: true
+    prometheus: true
+    prometheusOperator: true

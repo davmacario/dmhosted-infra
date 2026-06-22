@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: homepage-cert-internal
+  namespace: homepage
+spec:
+  secretName: homepage-cert-internal
+  issuerRef:
+    name: cloudflare-clusterissuer
+    kind: ClusterIssuer
+  dnsNames:
+    - homepage.internal.dmhosted.com

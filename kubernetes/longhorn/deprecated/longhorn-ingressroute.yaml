@@ -1,0 +1,22 @@
+# WARNING: do not use! It is not safe to expose the dashboard publicly.
+# Instead, rely on longhorn-ingressroute-tailscale.yaml, which exposes it only
+# over Tailscale
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: longhorn-ingressroute-traefik
+  namespace: longhorn-system
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`longhorn.local.dmhosted.com`)
+      kind: Rule
+      middlewares:
+        - name: longhorn-ui-basicauth
+          namespace: longhorn-system
+      services:
+        - name: longhorn-frontend
+          port: 80
+  tls:
+    secretName: longhorn-dashboard-certificate-secret-prod

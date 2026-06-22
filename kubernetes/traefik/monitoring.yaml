@@ -1,0 +1,39 @@
+# Service targeting port 9100
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-primary-monitoring
+  namespace: traefik
+  labels:
+    app: traefik
+    instance: primary
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 9100
+      targetPort: 9100
+      protocol: TCP
+  selector:
+    app: traefik
+    instance: primary
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: traefik-servicemonitor
+  namespace: traefik
+  labels:
+    release: prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: traefik
+      instance: primary
+  targetLabels:
+    - app
+    - instance
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s

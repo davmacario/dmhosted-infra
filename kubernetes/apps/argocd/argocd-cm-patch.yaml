@@ -1,0 +1,20 @@
+# Patch for the argocd-cm configmap. See kustomize.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+data:
+  url: https://argocd.internal.dmhosted.com
+
+  # Available user permissions:
+  #   apiKey - allows generating API keys
+  #   login - allows to login using UI
+
+  # New user - API only (for Homepage)
+  accounts.homepage: apiKey
+  accounts.homepage.enabled: "true"
+
+  ### SourceHydrator commit author name (optional).
+  commit.author.name: "Argo CD"
+  commit.author.email: "argo-cd@dmhosted.com"

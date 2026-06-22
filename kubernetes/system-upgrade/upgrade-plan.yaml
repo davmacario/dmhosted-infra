@@ -1,0 +1,44 @@
+# Server plan
+apiVersion: upgrade.cattle.io/v1
+kind: Plan
+metadata:
+  name: server-plan
+  namespace: system-upgrade
+spec:
+  concurrency: 1
+  cordon: true
+  nodeSelector:
+    matchExpressions:
+    - key: node-role.kubernetes.io/control-plane
+      operator: In
+      values:
+      - "true"
+  serviceAccountName: system-upgrade
+  upgrade:
+    image: ghcr.io/k3s-io/k3s-upgrade
+  channel: https://update.k3s.io/v1-release/channels/v1.35
+  # version: 1.33.8+k3s3
+---
+# Agent plan
+apiVersion: upgrade.cattle.io/v1
+kind: Plan
+metadata:
+  name: agent-plan
+  namespace: system-upgrade
+spec:
+  concurrency: 1
+  cordon: true
+  nodeSelector:
+    matchExpressions:
+    - key: node-role.kubernetes.io/control-plane
+      operator: DoesNotExist
+  prepare:
+    args: # this will cause this plan to wait for the server plan to finish
+    - prepare
+    - server-plan
+    image: ghcr.io/k3s-io/k3s-upgrade
+  serviceAccountName: system-upgrade
+  upgrade:
+    image: ghcr.io/k3s-io/k3s-upgrade
+  channel: https://update.k3s.io/v1-release/channels/v1.35
+  # version: 1.33.8+k3s3

@@ -1,0 +1,21 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: nginx-ingressroute
+  namespace: nginx
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: nginx.local.dmhosted.com
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    # NOTE: this conflicts with ./ingress.yaml -- only deploy 1 of the 2 (will fail)
+    - match: Host(`nginx.local.dmhosted.com`)
+      kind: Rule
+      services:
+        - name: nginx
+          port: 80
+  tls:
+    # secretName: nginx-certificate-secret-staging
+    secretName: nginx-certificate-secret-prod

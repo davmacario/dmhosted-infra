@@ -1,0 +1,67 @@
+---
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+additionalArguments:
+  - "--serversTransport.insecureSkipVerify=true"
+  - "--log.level=WARN"
+deployment:
+  enabled: true
+  replicas: 2
+  annotations: {}
+  podAnnotations: {}
+  additionalContainers: []
+  initContainers: []
+  podLabels: # Tailscale Traefik instance
+    app: traefik
+    instance: tailscale
+
+resources:
+  limits:
+    cpu: "250m"
+    memory: "256Mi"
+  requests:
+    cpu: "50m"
+    memory: "32Mi"
+
+ports:
+  web:
+    port: 80
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    port: 443
+    http:
+      tls:
+        enabled: true
+ingressClass:
+  enabled: true
+  isDefaultClass: false
+  name: traefik-tailscale
+ingressRoute:
+  dashboard:
+    enabled: false
+
+providers:
+  kubernetesCRD:
+    enabled: true
+    ingressClass: "traefik-tailscale"
+  kubernetesIngress:
+    enabled: true
+
+rbac:
+  enabled: true
+
+service:
+  enabled: true
+  type: LoadBalancer
+  spec:
+    loadBalancerClass: tailscale
+  annotations: {}
+  labels: {}
+  loadBalancerSourceRanges: []
+  externalIPs: []

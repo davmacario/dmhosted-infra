@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whoami
+  namespace: whoami
+  labels:
+    app: whoami
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: whoami
+  template:
+    metadata:
+      labels:
+        app: whoami
+    spec:
+      containers:
+        - name: whoami
+          image: traefik/whoami
+          ports:
+            - containerPort: 80
+          resources:
+            limits:
+              cpu: 30m
+              memory: 32Mi
+            requests:
+              cpu: 5m
+              memory: 8Mi

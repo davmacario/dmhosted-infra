@@ -1,0 +1,25 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: homepage-ingressroute-internal-root
+  namespace: homepage
+  annotations:
+    kubernetes.io/ingress.class: traefik-tailscale
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`internal.dmhosted.com`)
+      services:
+        - kind: Service
+          name: homepage
+          port: 3000
+          sticky:
+            cookie:
+              httpOnly: true
+              secure: true
+              sameSite: none
+  tls:
+    secretName: homepage-cert-internal-root

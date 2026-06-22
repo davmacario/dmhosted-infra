@@ -1,0 +1,76 @@
+# Values for Helm installation of Vaultwarden
+
+replicas: 2
+
+resources:
+  limits:
+    cpu: 300m
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+# Defaults, but good to track
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+storage:
+  existingVolumeClaim:
+    claimName: "vaultwarden-rwx-pvc"
+    dataPath: "/data"
+    attachmentsPath: "/attachments"
+
+database:
+  type: "postgresql"
+  host: "vaultwarden-db-rw"
+  port: 5432
+  dbName: "vaultwarden"
+  existingSecret: "vaultwarden-app-db-secret"
+  existingSecretUserKey: username
+  existingSecretPasswordKey: password
+
+domain: "https://vaultwarden.dmhosted.com"
+
+adminToken:
+  existingSecret: "vaultwarden-admin-token"
+  existingSecretKey: "admin-token"
+
+timeZone: "Europe/Amsterdam"
+
+service:
+  type: "ClusterIP"
+  annotations: {}
+  labels: {}
+  sessionAffinity: "ClientIP"
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+
+ingress:
+  enabled: false
+
+# Others
+signupsAllowed: false
+signupsVerify: "true"
+invitationsAllowed: true
+invitationOrgName: "DMHosted's Vaultwarden"
+invitationExpirationHours: "120"
+
+smtp:
+  existingSecret: vaultwarden-smtp
+  port: 587
+  security: starttls
+  from: vaultwarden@dmhosted.com
+  fromName: Vaultwarden
+  host: smtp-relay.brevo.com
+  username:
+    existingSecretKey: username
+  password:
+    existingSecretKey: password
+  authMechanism: "Plain"
+  acceptInvalidHostnames: "false"
+  acceptInvalidCerts: "false"
+  debug: false

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: meilisearch-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-data-local
+  resources:
+    requests:
+      storage: 2Gi

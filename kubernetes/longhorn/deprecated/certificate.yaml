@@ -1,0 +1,13 @@
+# WARNING: not needed, as the internal cert is not used
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: longhorn-dashboard-ingressroute-certificate
+  namespace: longhorn-system
+spec:
+  secretName: longhorn-dashboard-certificate-secret-prod
+  issuerRef:
+    name: cloudflare-clusterissuer
+    kind: ClusterIssuer
+  dnsNames:
+    - longhorn.local.dmhosted.com

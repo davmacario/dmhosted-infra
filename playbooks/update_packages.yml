@@ -1,0 +1,16 @@
+---
+- name: Apt update & Apt upgrade -y
+  hosts: all
+  become: true
+  strategy: free
+  tasks:
+    - name: update
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+    - name: upgrade
+      apt:
+        upgrade: yes
+    - name: autoremove
+      apt:
+        autoremove: true

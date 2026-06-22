@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflared-deployment
+  namespace: cloudflare
+  labels:
+    app: cloudflared
+    tunnel-name: k3s-traefik
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      pod: cloudflared
+      tunnel-name: k3s-traefik
+  template:
+    metadata:
+      labels:
+        pod: cloudflared
+        tunnel-name: k3s-traefik
+    spec:
+      securityContext:
+        sysctls:
+          # Allows ICMP traffic (ping, traceroute) to resources behind cloudflared.
+          - name: net.ipv4.ping_group_range
+            value: "65532 65532"
+      containers:
+        - image: cloudflare/cloudflared:2026.5.0
+          name: cloudflared
+          # NOTE: can use token with config + credentials files!
+          env:
+            - name: TUNNEL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: tunnel-token
+                  key: token
+          command:
+            # Configures tunnel run parameters
+            - cloudflared
+            - tunnel
+            - --no-autoupdate
+            - --loglevel
+            - info
+            - --metrics
+            - 0.0.0.0:2000
+            - --config
+            - /etc/cloudflared/config/config.yaml
+            - run
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: 2000
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          ports: # Not required, but allows to refer to this port with name in svc
+            - name: metrics
+              containerPort: 2000
+              protocol: TCP
+          resources:
+            limits:
+              cpu: "100m"
+              memory: "128Mi"
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/cloudflared/config
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: cloudflared-config
+            items:
+              - key: config.yaml
+                path: config.yaml

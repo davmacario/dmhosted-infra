@@ -1,0 +1,24 @@
+podEnv: [] # name + value format
+
+image:
+  tag: "2.2.1"
+
+service:
+  type: ClusterIP
+  port: 3001
+
+volume:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 4Gi
+
+strategy:
+  type: Recreate
+
+dnsPolicy: ClusterFirst
+dnsConfig:
+  nameservers:
+    - 100.127.99.35
+  options:
+    - name: ndots
+      value: "2"

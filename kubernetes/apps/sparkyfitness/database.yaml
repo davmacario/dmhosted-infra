@@ -1,0 +1,97 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: sparkyfitness-db
+  namespace: sparkyfitness
+  labels:
+    app: sparkyfitness-cnpg
+spec:
+  description: "Database for SparkyFitness"
+  inheritedMetadata:
+    labels:
+      app: sparkyfitness-cnpg
+  imageName: ghcr.io/cloudnative-pg/postgresql:18-minimal-trixie
+  imagePullPolicy: IfNotPresent
+  instances: 3
+  storage:
+    storageClass: longhorn-singlecopy
+    size: 20Gi
+  bootstrap:
+    initdb:
+      database: sparkyfitness
+      owner: sparkyapp
+      secret:
+        name: sparkyfitness-app-cnpg-secret
+      import: # Used old DB to bootstrap as part of PostgreSQL major version update
+        type: microservice
+        databases:
+          - sparkyfitness
+        source:
+          externalCluster: postgres-15-db
+  managed:
+    roles:
+      - name: sparky
+        ensure: present
+        login: true
+        superuser: true
+        createdb: true
+        passwordSecret:
+          name: sparkyfitness-cnpg-secret
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 300m
+      memory: 512Mi
+  externalClusters:
+    - name: postgres-15-db
+      connectionParameters:
+        host: sparkyfitness-cnpg-ro # Read-only instance, old DB
+        user: sparky
+        dbname: sparkyfitness
+      password:
+        name: sparkyfitness-cnpg-secret
+        key: password
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: rustfs-store
+---
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: rustfs-store
+  namespace: sparkyfitness
+  labels:
+    app: sparkyfitness-cnpg
+spec:
+  configuration:
+    destinationPath: s3://cnpg-backups/sparkyfitness
+    endpointURL: http://192.168.178.254:30292
+    s3Credentials:
+      accessKeyId:
+        name: sparkyfitness-cnpg-rustfs-secret
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: sparkyfitness-cnpg-rustfs-secret
+        key: ACCESS_SECRET_KEY
+    wal:
+      compression: gzip
+  retentionPolicy: 30d
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: sparkyfitness-rustfs-backup
+  namespace: sparkyfitness
+spec:
+  cluster:
+    name: sparkyfitness-db
+  schedule: "0 45 1 * * *" # Every day at 01:45
+  backupOwnerReference: self
+  immediate: true
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io

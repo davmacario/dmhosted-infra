@@ -1,0 +1,50 @@
+controller:
+  driver:
+    image:
+      tag: next
+csiDriver:
+  name: nfs
+driver:
+  config:
+    driver: freenas-api-nfs
+  existingConfigSecret: truenas-nfs-driver-config
+storageClasses:
+  - allowVolumeExpansion: true
+    defaultClass: false
+    mountOptions:
+      - noatime
+      - nfsvers=3
+      - nolock
+    name: democratic-nfs
+    parameters:
+      detachedVolumesFromSnapshots: 'false'
+      fsType: nfs
+    reclaimPolicy: Delete
+    volumeBindingMode: Immediate
+  - allowVolumeExpansion: true
+    defaultClass: false
+    mountOptions:
+      - noatime
+      - nfsvers=3
+      - nolock
+    name: democratic-nfs-retain
+    parameters:
+      detachedVolumesFromSnapshots: 'false'
+      fsType: nfs
+    reclaimPolicy: Retain
+    volumeBindingMode: Immediate
+# TODO: enable volume snapshots - see
+# https://github.com/kubernetes-csi/external-snapshotter
+# volumeSnapshotClasses:
+#   - name: nfs
+#     deletionPolicy: Retain
+#     parameters:
+#       detachedSnapshots: true
+#     secrets:
+#       snapshotter-secret:
+#   - name: nfs-retain
+#     deletionPolicy: Retain
+#     parameters:
+#       detachedSnapshots: true
+#     secrets:
+#       snapshotter-secret:

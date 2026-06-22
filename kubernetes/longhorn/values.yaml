@@ -1,0 +1,48 @@
+---
+longhornUI:
+  replicas: 2
+defaultSettings:
+  # Schedule pods on nodes that have the PVs they need
+  defaultDataLocality: "best-effort"
+  # Allow automatically discovering new nodes
+  replicaAutoBalance: "best-effort"
+  # Default number of volume replicas - value is default
+  defaultReplicaCount: '{"v1":"3","v2":"3"}'
+  # Prevent draining node if it contains last replica of PV
+  nodeDrainPolicy: block-if-contains-last-replica
+  # Auto upgrade (if possible) volumes' engine version
+  concurrentAutomaticEngineUpgradePerNodeLimit: 2
+persistence:
+  # If PVC is deleted, volumes are not deleted - need to do it manually
+  reclaimPolicy: Retain
+csi: # The following are all defaults
+  attacherReplicaCount: 3
+  provisionerReplicaCount: 3
+  resizerReplicaCount: 3
+  snapshotterReplicaCount: 3
+# Enable prometheus endpoint
+metrics:
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus-stack
+
+# Hotfixes - see https://longhorn.io/docs/1.11.0/important-notes/#hotfix
+upgradeCheck:
+  enabled: false
+preUpgradeChecker:
+  upgradeVersionCheck: false
+image:
+  longhorn:
+    engine:
+      tag: v1.11.1
+    manager:
+      tag: v1.11.1
+    instanceManager:
+      tag: v1.11.1
+    ui:
+      tag: v1.11.1
+    shareManager:
+      tag: v1.11.1
+    backingImageManager:
+      tag: v1.11.1

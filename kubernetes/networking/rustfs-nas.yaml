@@ -1,0 +1,94 @@
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: rustfs-nas
+  namespace: networking
+  labels:
+    kubernetes.io/service-name: rustfs-nas # Required to link the Service
+addressType: IPv4
+endpoints:
+  - addresses:
+      - 192.168.178.254 # Internal static IP of NAS, reachable by cluster
+ports:
+  - name: data
+    port: 30292 # RustFS data port
+    protocol: TCP
+  - name: ui
+    port: 30293 # RustFS UI port
+    protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rustfs-nas
+  namespace: networking
+spec:
+  ports:
+    - name: data
+      port: 30292
+    - name: ui
+      port: 30293
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: rustfs-nas-data
+  namespace: networking
+  annotations:
+    kubernetes.io/ingress.class: traefik-tailscale
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`rustfs.internal.dmhosted.com`)
+      kind: Rule
+      services:
+        - name: rustfs-nas
+          port: 30292
+  tls:
+    secretName: rustfs-nas-data-certificate
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: rustfs-nas-data-certificate
+  namespace: networking
+spec:
+  secretName: rustfs-nas-data-certificate
+  issuerRef:
+    name: cloudflare-clusterissuer
+    kind: ClusterIssuer
+  dnsNames:
+    - rustfs.internal.dmhosted.com
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: rustfs-nas-ui
+  namespace: networking
+  annotations:
+    kubernetes.io/ingress.class: traefik-tailscale
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`rustfs-ui.internal.dmhosted.com`)
+      kind: Rule
+      services:
+        - name: rustfs-nas
+          port: 30293
+  tls:
+    secretName: rustfs-nas-ui-certificate
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: rustfs-nas-ui-certificate
+  namespace: networking
+spec:
+  secretName: rustfs-nas-ui-certificate
+  issuerRef:
+    name: cloudflare-clusterissuer
+    kind: ClusterIssuer
+  dnsNames:
+    - rustfs-ui.internal.dmhosted.com

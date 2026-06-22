@@ -1,0 +1,73 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: vaultwarden-db
+  namespace: vaultwarden
+  labels:
+    app: vaultwarden
+spec:
+  description: "Database cluster for Vaultwarden"
+  inheritedMetadata:
+    labels:
+      app: vaultwarden
+  imageName: ghcr.io/cloudnative-pg/postgresql:18-minimal-trixie
+  imagePullPolicy: IfNotPresent
+  instances: 3
+  storage:
+    storageClass: longhorn-singlecopy
+    size: 10Gi
+  bootstrap:
+    initdb:
+      database: vaultwarden
+      owner: vaultwarden
+      secret:
+        name: vaultwarden-app-db-secret
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 300m
+      memory: 512Mi
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: rustfs-store
+---
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: rustfs-store
+  namespace: vaultwarden
+  labels:
+    app: vaultwarden
+spec:
+  configuration:
+    destinationPath: s3://cnpg-backups/vaultwarden
+    endpointURL: http://192.168.178.254:30292
+    s3Credentials:
+      accessKeyId:
+        name: vaultwarden-cnpg-rustfs-secret
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: vaultwarden-cnpg-rustfs-secret
+        key: ACCESS_SECRET_KEY
+    wal:
+      compression: gzip
+  retentionPolicy: 30d
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: vaultwarden-rustfs-backup
+  namespace: vaultwarden
+spec:
+  cluster:
+    name: vaultwarden-db
+  schedule: "0 0 1 * * *" # Every day at 01:00
+  backupOwnerReference: self
+  immediate: true
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io

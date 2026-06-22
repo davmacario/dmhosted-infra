@@ -1,0 +1,2 @@
+# Avoid committing file with secrets
+values.yaml

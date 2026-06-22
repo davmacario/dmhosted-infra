@@ -1,0 +1,31 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: grafana-internal-cert
+  namespace: monitoring
+spec:
+  secretName: grafana-internal-cert
+  issuerRef:
+    name: cloudflare-clusterissuer
+    kind: ClusterIssuer
+  dnsNames:
+    - grafana.internal.dmhosted.com
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: grafana-internal
+  namespace: monitoring
+  annotations:
+    kubernetes.io/ingress.class: traefik-tailscale
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`grafana.internal.dmhosted.com`)
+      kind: Rule
+      services:
+        - name: grafana
+          port: 80
+  tls:
+    secretName: grafana-internal-cert

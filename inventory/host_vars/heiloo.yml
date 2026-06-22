@@ -1,0 +1,9 @@
+---
+# +--------------------------------------+
+# | Variable overrides for host 'heiloo' |
+# +--------------------------------------+
+
+tailscale_ip: "100.80.15.112"
+
+# Get interface as default one - installation is local
+# flannel_iface: "{{ ansible_facts['default_ipv4']['interface'] }}"

@@ -1,0 +1,127 @@
+---
+# +-------------------------------------------+
+# | Variables applying to `k3s_cluster` group |
+# +-------------------------------------------+
+# (contents are based on the default template)
+k3s_version: v1.35.5+k3s1
+
+# Group name for master/control-plane nodes
+group_name_master: k3s_master
+# Group name for agent nodes
+group_name_agent: k3s_worker
+
+systemd_dir: /etc/systemd/system
+
+# interface which will be used for flannel
+flannel_iface: "{{ ansible_facts['default_ipv4']['interface'] }}"
+
+# uncomment calico_iface to use tigera operator/calico cni instead of flannel https://docs.tigera.io/calico/latest/about
+# calico_iface: "eth0"
+calico_ebpf: false # use eBPF dataplane instead of iptables
+calico_tag: v3.31.0 # calico version tag
+
+# uncomment cilium_iface to use cilium cni instead of flannel or calico
+# ensure v4.19.57, v5.1.16, v5.2.0 or more recent kernel
+# cilium_iface: "eth0"
+cilium_mode: native # native when nodes on same subnet or using bgp, else set routed
+cilium_tag: v1.18.5 # cilium version tag
+cilium_hubble: true # enable hubble observability relay and ui
+
+# if using calico or cilium, you may specify the cluster pod cidr pool
+cluster_cidr: 10.42.0.0/16
+service_cidr: 10.43.0.0/16
+
+# enable cilium bgp control plane for lb services and pod cidrs. disables metallb.
+cilium_bgp: false
+
+# bgp parameters for cilium cni. only active when cilium_iface is defined and cilium_bgp is true.
+cilium_bgp_my_asn: "64513"
+cilium_bgp_peer_asn: "64512"
+cilium_bgp_peer_address: 192.168.30.1
+cilium_bgp_lb_cidr: 192.168.31.0/24 # cidr for cilium loadbalancer ipam
+
+# enable kube-vip ARP broadcasts
+kube_vip_arp: true
+
+# enable kube-vip BGP peering
+kube_vip_bgp: false
+
+# bgp parameters for kube-vip
+kube_vip_bgp_routerid: "127.0.0.1" # Defines the router ID for the BGP server
+kube_vip_bgp_as: "64513" # Defines the AS for the BGP server
+kube_vip_bgp_peeraddress: "192.168.178.1" # Defines the address for the BGP peer
+kube_vip_bgp_peeras: "64512" # Defines the AS for the BGP peer
+
+# apiserver_endpoint is the virtual ip-address which will be configured on each master
+apiserver_endpoint: 192.168.178.15
+
+# k3s_token is required  masters can talk together securely
+# this token should be alpha numeric only
+k3s_token: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          34346132313163653139326135376537643635303630316562613561363664633762633964306164
+          6339386539633431366334663137343066633365306639310a626337373633393934303662393435
+          66616432333734323738343034653163363732623434316336313362373264366234343639353333
+          3034396462313133660a643532343162313365653337333466336531396465646636306361313638
+          32393232366234666339313433373864636137613730613562353237663833333230326434336364
+          6433386631326137376632313365376138353665656535326235
+
+# The IP on which the node is reachable in the cluster.
+# Here, a sensible default is provided, you can still override
+# it for each of your hosts, though.
+k3s_node_ip: "{{ ansible_facts[flannel_iface]['ipv4']['address'] }}"
+
+# Disable the taint manually by setting: k3s_master_taint = false
+k3s_master_taint: false
+
+# these arguments are recommended for servers as well as agents:
+extra_args: >-
+  {{ '--flannel-iface=' + flannel_iface }}
+  --node-ip={{ k3s_node_ip }}
+
+# change these to your liking, the only required are: --disable servicelb, --tls-san {{ apiserver_endpoint }}
+# the contents of the if block is also required if using calico or cilium
+extra_server_args: >-
+  {{ extra_args }}
+  {{ '--node-taint node-role.kubernetes.io/master=true:NoSchedule' if k3s_master_taint else '' }}
+  --tls-san {{ apiserver_endpoint }}
+  --tls-san {{ k3s_node_ip }}
+  --tls-san {{ ansible_host }}
+  --tls-san {{ tailscale_ip }}
+  --disable servicelb
+  --disable traefik
+  --write-kubeconfig-mode 644
+  --kube-controller-manager-arg bind-address=0.0.0.0
+  --kube-proxy-arg metrics-bind-address=0.0.0.0
+  --kube-scheduler-arg bind-address=0.0.0.0
+  --etcd-expose-metrics true
+  --kubelet-arg containerd=/run/k3s/containerd/containerd.sock
+
+extra_agent_args: >-
+  {{ extra_args }}
+
+# image tag for kube-vip
+kube_vip_tag_version: v1.0.1
+
+# tag for kube-vip-cloud-provider manifest
+# kube_vip_cloud_provider_tag_version: "main"
+
+# metallb type frr or native
+metal_lb_type: native
+
+# metallb mode layer2 or bgp
+metal_lb_mode: layer2
+
+# bgp options
+# metal_lb_bgp_my_asn: "64513"
+# metal_lb_bgp_peer_asn: "64512"
+# metal_lb_bgp_peer_address: "192.168.30.1"
+
+# image tag for metal lb
+metal_lb_speaker_tag_version: v0.14.8
+metal_lb_controller_tag_version: v0.14.8
+
+# metallb ip range for load balancer
+metal_lb_ip_range: 192.168.178.20-192.168.178.29
+
+proxmox_lxc_configure: false

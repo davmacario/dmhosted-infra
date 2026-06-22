@@ -1,0 +1,34 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: whoami-public-cert
+  namespace: whoami
+spec:
+  secretName: whoami-public-cert
+  issuerRef:
+    name: cloudflare-clusterissuer
+    kind: ClusterIssuer
+  dnsNames:
+    - whoami.dmhosted.com
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: whoami-ingressroute
+  namespace: whoami
+  annotations:
+    external-dns.alpha.kubernetes.io/provider: cloudflare
+    external-dns.alpha.kubernetes.io/hostname: whoami.dmhosted.com
+    external-dns.alpha.kubernetes.io/target: b8f93036-6de6-4d1c-a590-bdbf64f990ad.cfargotunnel.com
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`whoami.dmhosted.com`)
+      kind: Rule
+      services:
+        - name: whoami
+          port: 80
+  tls:
+    secretName: whoami-public-cert

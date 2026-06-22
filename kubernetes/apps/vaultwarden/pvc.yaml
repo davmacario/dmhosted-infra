@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vaultwarden-rwx-pvc
+  namespace: vaultwarden
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: longhorn-rwx
+  resources:
+    requests:
+      storage: 5Gi

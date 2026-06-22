@@ -1,0 +1,55 @@
+---
+- name: Pre tasks
+  hosts: k3s_cluster
+  vars_files: vars/k3s.yml
+  pre_tasks:
+    - name: Verify Ansible is version 2.11 or above. (If this fails you may need to update Ansible)
+      ansible.builtin.assert:
+        that: ansible_version.full is version_compare('2.11', '>=')
+        msg: >
+          "Ansible is out of date. Need version >=2.11"
+
+- name: Prepare k3s nodes
+  hosts: k3s_cluster
+  gather_facts: true
+  environment: "{{ proxy_env | default({}) }}"
+  roles:
+    - role: techno_tim.k3s_ansible.prereq
+      become: true
+    # This is just for raspberry pi's
+    # - role: techno_tim.k3s_ansible.raspberrypi
+    #   become: true
+    - role: techno_tim.k3s_ansible.download
+      become: true
+
+- name: Setup k3s servers
+  hosts: k3s_master
+  environment: "{{ proxy_env | default({}) }}"
+  roles:
+    - role: techno_tim.k3s_ansible.k3s_server
+      become: true
+
+- name: Setup k3s agents
+  hosts: k3s_worker
+  environment: "{{ proxy_env | default({}) }}"
+  roles:
+    - role: techno_tim.k3s_ansible.k3s_agent
+      become: true
+
+- name: Configure k3s cluster
+  hosts: k3s_master
+  environment: "{{ proxy_env | default({}) }}"
+  roles:
+    - role: techno_tim.k3s_ansible.k3s_server_post
+      become: true
+
+- name: Storing kubeconfig in the playbook directory
+  hosts: k3s_master
+  environment: "{{ proxy_env | default({}) }}"
+  tasks:
+    - name: Copying kubeconfig from {{ hostvars[groups[group_name_master | default('master')][0]]['ansible_hostname'] }}
+      ansible.builtin.fetch:
+        src: "{{ ansible_user_dir }}/.kube/config"
+        dest: ~/.kube/config.new
+        flat: true
+      when: ansible_facts['hostname'] == hostvars[groups[group_name_master | default('master')][0]]['ansible_hostname']

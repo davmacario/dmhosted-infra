@@ -1,0 +1,15 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: nginx-ingressroute-certificate-staging
+  namespace: nginx
+spec:
+  # This is the name of the Kube secret where the cert will be stored
+  secretName: nginx-certificate-secret-staging
+  issuerRef: # Reference cluster issuer
+    name: cloudflare-clusterissuer-staging
+    kind: ClusterIssuer
+  dnsNames: # Specify DNS names for which the cert will be valid (see nginx ingressroute hosts)
+    - nginx.local.dmhosted.com
+    - nginx.internal.dmhosted.com

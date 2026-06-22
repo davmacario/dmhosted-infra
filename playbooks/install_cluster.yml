@@ -1,0 +1,108 @@
+---
+- name: Install Cluster
+  hosts: k3s_cluster
+  become: true
+  tasks:
+    - name: Install apt dependencies
+      apt:
+        name: "{{item}}"
+        state: present
+        update_cache: yes
+      loop:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg-agent
+        - software-properties-common
+        - jq
+        - nmap
+        - open-iscsi
+        - nfs-common
+        - cryptsetup
+        - dmsetup
+        - net-tools
+        - cifs-utils
+        - multipath-tools
+        - scsitools
+        - lsscsi
+
+    - name: Setup multipath
+      copy:
+        dest: /etc/multipath.conf
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          defaults {
+              user_friendly_names yes
+              find_multipaths yes
+          }
+      notify: Restart multipathd
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+    - name: add docker repository to apt
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu {{ ansible_facts["distribution_release"] }} stable
+        state: present
+    - name: install docker
+      apt:
+        name: "{{item}}"
+        state: latest
+        update_cache: yes
+      loop:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+        - docker-buildx-plugin
+        - docker-compose-plugin
+    - name: check docker is active
+      service:
+        name: docker
+        state: started
+        enabled: yes
+    - name: Ensure group "docker" exists
+      ansible.builtin.group:
+        name: docker
+        state: present
+    - name: adding ubuntu to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+
+    # UFW configuration for K3s
+    - name: Allow kube-apiserver port
+      community.general.ufw:
+        rule: allow
+        port: "6443"
+        proto: tcp
+    - name: Allow pod network
+      community.general.ufw:
+        rule: allow
+        src: "10.42.0.0/16"
+        dest: "any"
+    - name: Allow service network
+      community.general.ufw:
+        rule: allow
+        src: "10.43.0.0/16"
+        dest: "any"
+
+    # Disable swap
+    - name: Disable swap (now)
+      ansible.builtin.command: swapoff -a
+      when: ansible_facts['swaptotal_mb'] | float > 0
+    # FIXME: the following only works on Ubuntu 24.04, as it matches '/swap.img ...'
+    - name: Disable swap from /etc/fstab (comment out line)
+      ansible.builtin.replace:
+        path: /etc/fstab
+        regexp: '^[^#](\S*\s*swap.*)$'
+        replace: '# \1'
+
+  handlers:
+    - name: Restart multipathd
+      service:
+        name: multipathd
+        state: restarted

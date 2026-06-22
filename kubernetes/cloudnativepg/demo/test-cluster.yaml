@@ -1,0 +1,18 @@
+# Use this manifest to test the installation of CNPG
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: database-test
+  labels:
+    name: database-test
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: demo-cluster
+  namespace: database-test
+spec:
+  instances: 3
+  storage:
+    storageClass: local-path  # Not using Longhorn
+    size: 1Gi

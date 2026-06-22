@@ -1,0 +1,32 @@
+image:
+  tag: "2.1.5"
+
+replicaCount: 1
+strategy:
+  type: Recreate
+
+# -- Environment variables from secrets or configmaps to add to the stirling-pdf pods
+envsFrom: []
+
+deployment:
+  extraVolumeMounts:
+    - mountPath: /configs
+      name: storage-volume
+
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 5Gi
+  path: /configs
+  volumeName: stirling-pdf
+
+resources:
+  # limits:
+  #   cpu: 400m
+  #   memory: 1024Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+service:
+  servicename: stirling-pdf

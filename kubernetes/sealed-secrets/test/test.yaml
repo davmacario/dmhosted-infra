@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: test-secret
+  namespace: default
+  labels:
+    label1: test
+type: Opaque
+stringData:
+  hello: world

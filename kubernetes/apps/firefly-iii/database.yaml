@@ -1,0 +1,73 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: firefly-iii-db
+  namespace: firefly-iii
+  labels:
+    app: firefly-iii
+spec:
+  description: "Database cluster for Firefly-III"
+  inheritedMetadata:
+    labels:
+      app: firefly-iii
+  imageName: ghcr.io/cloudnative-pg/postgresql:18-minimal-trixie
+  imagePullPolicy: IfNotPresent
+  instances: 3
+  storage:
+    storageClass: longhorn-singlecopy
+    size: 10Gi
+  bootstrap:
+    initdb:
+      database: firefly
+      owner: firefly
+      secret:
+        name: firefly-iii-app-db-secret
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 300m
+      memory: 512Mi
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: rustfs-store
+---
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: rustfs-store
+  namespace: firefly-iii
+  labels:
+    app: firefly-iii
+spec:
+  configuration:
+    destinationPath: s3://cnpg-backups/firefly-iii
+    endpointURL: http://192.168.178.254:30292
+    s3Credentials:
+      accessKeyId:
+        name: firefly-iii-cnpg-rustfs-secret
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: firefly-iii-cnpg-rustfs-secret
+        key: ACCESS_SECRET_KEY
+    wal:
+      compression: gzip
+  retentionPolicy: 30d
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: firefly-iii-rustfs-backup
+  namespace: firefly-iii
+spec:
+  cluster:
+    name: firefly-iii-db
+  schedule: "0 30 1 * * *" # Every day at 01:30
+  backupOwnerReference: self
+  immediate: true
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io
