@@ -4,6 +4,7 @@ namespace: argocd
 resources:
   - https://raw.githubusercontent.com/argoproj/argo-cd/v3.4.4/manifests/install.yaml
   - argocd-ingressroute.yaml
+  - github-repo-creds-secret-sealed.yaml
   # - argocd-app.yaml
 
 patches:
