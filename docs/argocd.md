@@ -229,7 +229,59 @@ The CRD's API defines, at a high level:
 - `source`: reference to the desired state in Git (a repo + tag/ref + path)
 - `destination`: reference to the target cluster + namespace
 
+#### Configuring access to a repository (github)
+
+Assuming the repo on which you keep the manifests/configuration for your K8s apps is private, we need to set up credentials to access it.
+
+First, we need to create a secret (`github-repo-creds-secret.yaml`):
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github-repo-credentials
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  username: x-token
+  password: github_pat_xxxx
+  type: git
+  url: https://github.com/davmacario/dmhosted-infra
+```
+
+Where the value of `password` is a fine-grained GitHub token with read-only access on the repo.
+
+Then, seal it:
+
+```bash
+kubeseal -f github-repo-creds-secret.yaml -w github-repo-creds-secret-sealed.yaml --format=yaml
+```
+
+and add the sealed secret file in the `resources` section of the [Kustomization](../kubernetes/apps/argocd/kustomization.yaml).
+
 #### Manifest-only kube workloads
+
+> Taking [Sparkyfitness](../kubernetes/apps/sparkyfitness) as reference.
+
+Definition of the Application CRD:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sparkyfitness
+  namespace: argocd
+spec:
+  project: default  # Not relevant for now
+  source:
+    repoURL: https://github.com/davmacario/dmhosted-infra
+    targetRevision: HEAD
+    path: kubernetes/apps/sparkyfitness
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: guestbook
+```
 
 #### Helm-based kube workloads
 
@@ -240,6 +292,14 @@ Example: ArgoCD
 ```yaml
 
 ```
+
+## App-Of-Apps Pattern
+
+In my cluster, I went with an `app-of-apps` pattern.
+
+What this means is, I have defined a "main" `root` Application (defined [here](../kubernetes/root-app.yaml)), which "watches" the [argocd-apps](../kubernetes/argocd-apps/) directory, which in turn contains the definition of other Applications.
+
+This way, to enroll/deploy a new application, it's enough to create a YAML for the Application resource and add it in the argocd-apps directory, so that ArgoCD can pick it up.
 
 ## Configuring ArgoCD
 
