@@ -14,6 +14,12 @@ patches:
       kind: ConfigMap
       name: argocd-cm
 
+  # Edit RBAC config
+  - path: argocd-rbac-cm-patch.yaml
+    target:
+      kind: ConfigMap
+      name: argocd-rbac-cm
+
   # Edit the Deployment (add --insecure flag and resources)
   - path: argocd-server-patch.yaml
     target:
