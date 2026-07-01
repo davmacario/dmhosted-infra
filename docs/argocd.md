@@ -287,10 +287,29 @@ spec:
 
 #### Kustomize-based kube workloads
 
+If the `path` points to a directory containing a `kustomization.yaml` file, it will be picked up automatically from kustomize, and it will be used to build the manifest.
+
 Example: ArgoCD
 
 ```yaml
-
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/davmacario/dmhosted-infra
+    targetRevision: main
+    path: kubernetes/apps/argocd
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true  # Needed because we had to apply with `--server-side`
 ```
 
 ## App-Of-Apps Pattern
