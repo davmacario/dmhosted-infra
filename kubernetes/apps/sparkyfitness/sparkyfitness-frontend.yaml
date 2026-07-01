@@ -39,7 +39,7 @@ spec:
           - sparkyfitness.svc.cluster.local # Allows to refer to the backend as `sparkyfitness-backend`
       containers:
         - name: sparkyfitness-backend
-          image: codewithcj/sparkyfitness:v0.16.9
+          image: codewithcj/sparkyfitness:v0.17.2
           env:
             - name: SPARKY_FITNESS_FRONTEND_URL
               value: https://sparkyfitness.internal.dmhosted.com
