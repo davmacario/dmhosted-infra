@@ -36,6 +36,11 @@ data:
   DB_DATABASE: firefly
   PGSQL_SCHEMA: public
   APP_URL: https://firefly-iii.internal.dmhosted.com
+  MAIL_MAILER: smtp
+  MAIL_HOST: smtp-relay.brevo.com
+  MAIL_PORT: "587"
+  MAIL_FROM: firefly-iii@dmhosted.com
+  MAIL_ENCRYPTION: starttls
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -76,7 +81,7 @@ spec:
           - firefly-iii.svc.cluster.local
       containers:
         - name: firefly-iii-core
-          image: fireflyiii/core:version-6.4.15
+          image: fireflyiii/core:version-6.6.6
           env:
             - name: DB_USERNAME
               valueFrom:
