@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: firefly-iii
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/davmacario/dmhosted-infra
+    targetRevision: main
+    path: kubernetes/apps/firefly-iii
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: firefly-iii
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false
