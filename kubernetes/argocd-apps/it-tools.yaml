@@ -1,21 +1,20 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: argocd
+  name: it-tools
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/davmacario/dmhosted-infra
     targetRevision: main
-    path: kubernetes/apps/argocd
+    path: kubernetes/apps/it-tools
   destination:
     server: https://kubernetes.default.svc
-    namespace: argocd
+    namespace: it-tools
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=false
-      - ServerSideApply=true
