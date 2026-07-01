@@ -9,10 +9,10 @@ spec:
     repoURL: https://github.com/davmacario/dmhosted-infra
     targetRevision: main
     path: kubernetes/apps/argocd
+    kustomize: {}
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
   syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
