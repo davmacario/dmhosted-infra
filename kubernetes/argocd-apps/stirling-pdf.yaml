@@ -9,7 +9,7 @@ spec:
   project: default
   sources:
     - repoURL: https://stirling-tools.github.io/Stirling-PDF-chart # URL of the Helm chart
-      chart: stirling-pdf/stirling-pdf-chart
+      chart: stirling-pdf-chart
       targetRevision: 3.1.0
       helm:
         valueFiles: # Using ref - see next item in list
