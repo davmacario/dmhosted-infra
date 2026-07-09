@@ -285,6 +285,49 @@ spec:
 
 #### Helm-based kube workloads
 
+ArgoCD also allows using `Application` CRDs to manage apps installed via Helm charts.
+
+In general, it is possible to specify the configuration in `spec.source.helm`, assuming a the application consists of a single Helm chart.
+
+In my case, though, I often add other resources on top of the helm chart, such as `IngressRoute`s and `Certificate`s.
+In this case, it is necessary to use `spec.sources`.
+
+We will use [Stirling PDF](../kubernetes/apps/stirling-pdf/) as an example.
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: stirling-pdf
+  namespace: argocd
+  labels:
+    name: stirling-pdf
+spec:
+  project: default
+  sources:
+    - repoURL: https://stirling-tools.github.io/Stirling-PDF-chart # URL of the Helm chart
+      chart: stirling-pdf/stirling-pdf-chart
+      targetRevision: 3.1.0
+      helm:
+        valueFiles: # Using ref - see next item in list
+          - $values/kubernetes/apps/stirling-pdf/values.yaml
+    - repoURL: https://github.com/davmacario/dmhosted-infra
+      targetRevision: main
+      ref: values
+
+    - repoURL: https://github.com/davmacario/dmhosted-infra
+      targetRevision: main
+      path: kubernetes/apps/stirling-pdf
+      directory: # Don't apply `values.yaml`, only other files
+        exclude: values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: stirling-pdf
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false
+```
+
 #### Kustomize-based kube workloads
 
 If the `path` points to a directory containing a `kustomization.yaml` file, it will be picked up automatically from kustomize, and it will be used to build the manifest.
