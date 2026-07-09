@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   name: chrome
 spec:
+  revisionHistoryLimit: 3
   replicas: 1
   selector:
     matchLabels:
