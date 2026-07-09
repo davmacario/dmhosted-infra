@@ -8,15 +8,15 @@ metadata:
 spec:
   project: default
   sources:
-    - repoURL: https://github.com/davmacario/dmhosted-infra
-      targetRevision: main
-      ref: values
     - repoURL: https://helm.irsigler.cloud
       chart: uptime-kuma
       targetRevision: 4.1.0
       helm:
         valueFiles:
           - $values/kubernetes/apps/uptime-kuma/values.yaml
+    - repoURL: https://github.com/davmacario/dmhosted-infra
+      targetRevision: main
+      ref: values
     - repoURL: https://github.com/davmacario/dmhosted-infra
       targetRevision: main
       path: kubernetes/apps/uptime-kuma
