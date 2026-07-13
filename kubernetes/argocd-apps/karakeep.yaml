@@ -15,4 +15,3 @@ spec:
   syncPolicy:
     syncOptions:
       - CreateNamespace=false
-      - ServerSideApply=true
