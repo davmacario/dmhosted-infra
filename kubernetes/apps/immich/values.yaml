@@ -38,7 +38,8 @@ immich:
       existingClaim: immich-data
   # Existing configuration resource name to skip creation of a new one
   # config file ref: https://immich.app/docs/install/config-file/
-  existingConfiguration: immich-app-config
+  existingConfiguration: immich-app-config-secret
+  configurationKind: Secret
 
 # Dependencies
 valkey:
