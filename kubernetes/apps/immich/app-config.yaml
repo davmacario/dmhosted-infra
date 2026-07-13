@@ -7,7 +7,7 @@ metadata:
   labels:
     app: immich
 data:
-  immich.yaml: |
+  immich-config.yaml: |
     trash:
       days: 30
       enabled: true
