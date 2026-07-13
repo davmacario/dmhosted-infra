@@ -31,6 +31,12 @@ spec:
     limits:
       cpu: 300m
       memory: 512Mi
+  postgresql: # Add vector plugin
+    extensions:
+      - name: pgvector
+        image:
+          # renovate: suite=trixie-pgdg depName=postgresql-18-pgvector
+          reference: ghcr.io/cloudnative-pg/pgvector:0.8.5-18-trixie
   plugins:
     - name: barman-cloud.cloudnative-pg.io
       isWALArchiver: true
@@ -48,6 +54,8 @@ spec:
     name: immich-db
   extensions:
     - name: vector
+      # renovate: suite=trixie-pgdg depName=postgresql-18-pgvector extractVersion=^(?<version>\d+\.\d+\.\d+)
+      version: "0.8.5"
 ---
 apiVersion: barmancloud.cnpg.io/v1
 kind: ObjectStore
