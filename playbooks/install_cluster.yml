@@ -2,6 +2,10 @@
 - name: Install Cluster
   hosts: k3s_cluster
   become: true
+  vars:
+    inotify_max_user_watches: 524288
+    inotify_max_user_instances: 1024
+    sysctl_file: /etc/sysctl.d/99-inotify-k8s.conf
   tasks:
     - name: Install apt dependencies
       apt:
@@ -101,8 +105,40 @@
         regexp: '^[^#](\S*\s*swap.*)$'
         replace: '# \1'
 
+    # Sysctl configuration (avoids limit on watchers)
+    - name: Deploy inotify sysctl config
+      ansible.builtin.copy:
+        dest: "{{ sysctl_file }}"
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          # Managed by Ansible - raise inotify limits for Kubernetes nodes
+          fs.inotify.max_user_watches = {{ inotify_max_user_watches }}
+          fs.inotify.max_user_instances = {{ inotify_max_user_instances }}
+      notify: Reload sysctl
+
+    - name: Ensure fs.inotify.max_user_watches is active
+      ansible.posix.sysctl:
+        name: fs.inotify.max_user_watches
+        value: "{{ inotify_max_user_watches }}"
+        sysctl_file: "{{ sysctl_file }}"
+        reload: true
+        state: present
+
+    - name: Ensure fs.inotify.max_user_instances is active
+      ansible.posix.sysctl:
+        name: fs.inotify.max_user_instances
+        value: "{{ inotify_max_user_instances }}"
+        sysctl_file: "{{ sysctl_file }}"
+        reload: true
+        state: present
+
   handlers:
     - name: Restart multipathd
       service:
         name: multipathd
         state: restarted
+    - name: Reload sysctl
+      ansible.builtin.command: sysctl --system
+      changed_when: false
