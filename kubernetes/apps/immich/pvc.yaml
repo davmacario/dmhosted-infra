@@ -10,7 +10,7 @@ metadata:
     app: immich
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   storageClassName: democratic-nfs-retain
   resources:
     requests:

@@ -24,6 +24,14 @@ spec:
       owner: immich
       secret:
         name: immich-app-db-secret
+  managed:
+    roles:
+      - name: immich
+        ensure: present
+        login: true
+        superuser: true # Need superuser permissions
+        passwordSecret:
+          name: immich-app-db-secret
   resources:
     requests:
       cpu: 100m

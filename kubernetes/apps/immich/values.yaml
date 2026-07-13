@@ -18,6 +18,15 @@ controllers:
               secretKeyRef:
                 name: immich-app-db-secret
                 key: password
+        resources:
+          requests:
+            cpu: 250m
+            memory: 128Mi
+          limits:
+            cpu: 2000m
+            memory: 400Mi
+    replicas: 1
+    strategy: RollingUpdate
 
 immich:
   metrics:
@@ -88,11 +97,19 @@ machine-learning:
             TRANSFORMERS_CACHE: /cache
             HF_XET_CACHE: /cache/huggingface-xet
             MPLCONFIGDIR: /cache/matplotlib-config
+          resources:
+            requests:
+              cpu: 500m
+              memory: 256Mi
+            limits:
+              cpu: 3000m
+              memory: 1024Mi
+      strategy: Recreate
   persistence:
     cache:
       enabled: true
       # Avoid downloading the ML models on every start
       type: persistentVolumeClaim
       size: 10Gi
-      accessMode: ReadWriteMany
+      accessMode: ReadWriteOnce
       storageClass: longhorn-singlecopy # Using longhorn because of data locality - new pods using this will be scheduled on node with volume
