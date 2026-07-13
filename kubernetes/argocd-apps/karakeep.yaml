@@ -3,3 +3,16 @@ kind: Application
 metadata:
   name: karakeep
   namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/davmacario/dmhosted-infra
+    targetRevision: main
+    path: kubernetes/apps/karakeep
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: karakeep
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true
