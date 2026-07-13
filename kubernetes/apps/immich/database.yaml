@@ -21,7 +21,7 @@ spec:
   bootstrap:
     initdb:
       database: immich
-      owner: immich-app
+      owner: immich
       secret:
         name: immich-app-db-secret
   resources:
