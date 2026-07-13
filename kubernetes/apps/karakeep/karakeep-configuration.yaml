@@ -1,0 +1,8 @@
+apiVersion: v1
+metadata:
+  name: karakeep-configuration
+  namespace: karakeep
+kind: ConfigMap
+data:
+  KARAKEEP_VERSION: 0.32.0
+  NEXTAUTH_URL: https://karakeep.internal.dmhosted.com

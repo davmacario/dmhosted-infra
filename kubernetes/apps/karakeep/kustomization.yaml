@@ -4,16 +4,6 @@ kind: Kustomization
 # NOTE: applied to all resources!
 namespace: karakeep
 
-secretGenerator:
-  - envs:
-      - .secrets
-    name: karakeep-secrets
-
-configMapGenerator:
-  - envs:
-      - .env
-    name: karakeep-configuration
-
 resources:
   - namespace.yaml
   - web-deployment.yaml
@@ -26,6 +16,8 @@ resources:
   - data-pvc.yaml
   - web-ingressroute.yaml
   - web-certificate.yaml
+  - karakeep-secrets-sealed.yaml
+  - karakeep-configuration.yaml
 
 replacements:
   - source:
