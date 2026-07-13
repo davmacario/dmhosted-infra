@@ -29,7 +29,7 @@ spec:
     - match: Host(`immich.internal.dmhosted.com`)
       kind: Rule
       services:
-        - name: immich
-          port: 8080
+        - name: immich-server
+          port: http
   tls:
     secretName: immich-internal-cert
