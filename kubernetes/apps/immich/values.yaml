@@ -64,6 +64,11 @@ valkey:
 
 # Immich components
 server:
+  serviceMonitor:
+    main:
+      enabled: true
+      labels:
+        release: prometheus-stack
   enabled: true
   controllers:
     main:
