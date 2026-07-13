@@ -25,6 +25,3 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: immich
-  syncPolicy:
-    syncOptions:
-      - CreateNamespace=false
