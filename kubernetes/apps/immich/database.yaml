@@ -38,7 +38,7 @@ spec:
       memory: 256Mi
     limits:
       cpu: 300m
-      memory: 512Mi
+      memory: 1536Mi
   postgresql: # Add vector plugin
     extensions:
       - name: pgvector
