@@ -1,0 +1,75 @@
+# DB for immich
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: immich-db
+  namespace: immich
+  labels:
+    app: immich
+spec:
+  description: Database cluster for Immich
+  inheritedMetadata:
+    labels:
+      app: immich
+  imageName: ghcr.io/cloudnative-pg/postgresql:18-minimal-trixie
+  imagePullPolicy: IfNotPresent
+  instances: 3
+  storage:
+    storageClass: longhorn-singlecopy
+    size: 10Gi
+  bootstrap:
+    initdb:
+      database: immich
+      owner: immich-app
+      secret:
+        name: immich-app-db-secret
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 300m
+      memory: 512Mi
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: rustfs-store
+---
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: rustfs-store
+  namespace: immich
+  labels:
+    app: immich
+spec:
+  configuration:
+    destinationPath: s3://cnpg-backups/immich
+    endpointURL: http://192.168.178.254:30292
+    s3Credentials:
+      accessKeyId:
+        name: immich-cnpg-rustfs-secret
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: immich-cnpg-rustfs-secret
+        key: ACCESS_SECRET_KEY
+    wal:
+      compression: gzip
+  retentionPolicy: 30d
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: immich-rustfs-backup
+  namespace: immich
+spec:
+  cluster:
+    name: immich-db
+  schedule: "0 30 1 * * *" # Every day at 01:30
+  backupOwnerReference: self
+  immediate: true
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io

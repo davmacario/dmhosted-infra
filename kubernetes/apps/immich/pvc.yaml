@@ -1,0 +1,17 @@
+# PVC for Immich, on NAS
+# Will contain all photos/videos
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-data
+  namespace: immich
+  labels:
+    app: immich
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: democratic-nfs-retain
+  resources:
+    requests:
+      storage: 500Gi

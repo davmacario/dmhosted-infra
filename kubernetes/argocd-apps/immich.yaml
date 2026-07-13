@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: immich
+  namespace: argocd
+  labels:
+    name: immich
+spec:
+  project: default
+  sources:
+    - repoURL: ghcr.io/immich-app/immich-charts
+      chart: immich
+      targetRevision: 0.13.1
+      helm:
+        valueFiles:
+          - $values/kubernetes/apps/immich/values.yaml
+    - repoURL: https://github.com/davmacario/dmhosted-infra
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/davmacario/dmhosted-infra
+      targetRevision: main
+      path: kubernetes/apps/immich
+      directory:
+        exclude: values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: immich
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false

@@ -1,0 +1,13 @@
+# Immich configuration file (configmap)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: immich-app-config
+  namespace: immich
+  labels:
+    app: immich
+data:
+  immich.yaml: |
+    trash:
+      days: 30
+      enabled: true
