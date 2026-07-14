@@ -24,7 +24,7 @@ controllers:
             memory: 256Mi
           limits:
             cpu: 2000m
-            memory: 2048Mi
+            memory: 3072Mi
     replicas: 1
     strategy: RollingUpdate
 
