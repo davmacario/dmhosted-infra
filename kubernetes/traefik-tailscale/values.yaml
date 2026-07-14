@@ -33,11 +33,17 @@ ports:
           to: websecure
           scheme: https
           permanent: true
+    transport:
+      respondingTimeouts:
+        readTimeout: "0s"
   websecure:
     port: 443
     http:
       tls:
         enabled: true
+    transport:
+      respondingTimeouts:
+        readTimeout: "0s"
 ingressClass:
   enabled: true
   isDefaultClass: false
