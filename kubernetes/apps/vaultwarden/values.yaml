@@ -2,6 +2,9 @@
 
 replicas: 2
 
+image:
+  tag: "1.37.0-alpine"
+
 resources:
   limits:
     cpu: 300m
