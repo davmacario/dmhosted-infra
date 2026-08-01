@@ -60,7 +60,7 @@ signupsAllowed: false
 signupsVerify: "true"
 invitationsAllowed: true
 invitationOrgName: "DMHosted's Vaultwarden"
-invitationExpirationHours: "120"
+invitationExpirationHours: "24"
 
 smtp:
   existingSecret: vaultwarden-smtp
