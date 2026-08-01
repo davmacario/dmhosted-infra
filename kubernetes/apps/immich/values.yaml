@@ -5,7 +5,7 @@ controllers:
       main:
         image:
           # Deployed immich version - see https://github.com/immich-app/immich/releases
-          tag: v3.0.2
+          tag: v3.1.0
         env:
           REDIS_HOSTNAME: '{{ printf "%s-valkey" .Release.Name }}'
           IMMICH_MACHINE_LEARNING_URL: '{{ printf "http://%s-machine-learning:3003" .Release.Name }}'
