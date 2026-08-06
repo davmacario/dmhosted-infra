@@ -11,6 +11,8 @@ tags:
 
 # CoreDNS Fix: Tailscale/Custom Domain Resolution Failures (ENOTFOUND)
 
+> **Disclaimer**: this writeup was written by AI
+
 ## Symptom
 
 Workloads in the cluster (e.g. Uptime Kuma) intermittently fail to resolve Tailscale/tailnet
@@ -21,7 +23,8 @@ machines or other tailnet devices.
 This can happen suddenly, with no changes to application config, typically correlating with a
 restart or reschedule of the `kube-dns` (CoreDNS) pod.
 
-> Happened at around 9 pm on 2026-08-05
+> Happened at around 9 pm on 2026-08-05; out of the blue - it worked fine for months and then
+> it stopped, resulting in Uptime Kuma showing all hosts down, while services were flaky.
 
 ## Root Cause
 
@@ -49,7 +52,7 @@ something we control directly.
 
 ### Complete Corefile (pre-fix)
 
-Obtained via
+Obtained via:
 
 ```bash
 kubectl -n kube-system get configmap coredns -o yaml
@@ -104,9 +107,14 @@ metadata:
 
 ## Fix
 
-Configure CoreDNS to explicitly forward our tailnet domain(s) to our Tailscale DNS server,
+Configure CoreDNS to explicitly forward our internal (VPN) domain(s) to our Tailscale DNS server,
 independent of node-level resolv.conf. This makes resolution deterministic and cluster-wide for
 all workloads, not just the one we noticed the issue on.
+
+> [!note]
+>
+> This is a _permanent_ fix that overrides the local node DNS config from within pods.
+> This does _not_ have any effect on the nodes' DNS settings.
 
 ### Steps
 
@@ -151,10 +159,10 @@ all workloads, not just the one we noticed the issue on.
    }
    ```
 
-   Replace:
-   - `your-tailnet-domain.com` — our custom tailnet domain
-   - `ts.net` — include if MagicDNS names also need resolving
-   - `<TAILSCALE_DNS_SERVER_IP>` — the tailnet IP of our custom Tailscale DNS server
+   Where:
+   - `internal.dmhosted.com` is the "internal-facing" subdomain I use for all services exposed
+     within Tailscale only (the only DNS that can answer this is my own DNS - Adguard Home).
+   - `ts.net` is the subdomain of any Tailnet, so any Magic DNS domain matches.
 
 4. Save. CoreDNS has the `reload` plugin enabled, so it will pick up the ConfigMap change
    automatically (within ~45 seconds) — **no pod restart required**.
@@ -172,6 +180,8 @@ all workloads, not just the one we noticed the issue on.
    ```bash
    kubectl exec -it <pod-name> -- nslookup <tailnet-hostname>
    ```
+
+   or simply see Uptime Kuma/Homepage dashboard being now able to resolve internal domains.
 
 ## Why This Is the Durable Fix
 
