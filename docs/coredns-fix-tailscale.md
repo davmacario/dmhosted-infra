@@ -1,0 +1,190 @@
+---
+id: coredns-fix-tailscale
+author: Davide Macario
+date: 2026-08-06
+aliases: []
+tags:
+  - homelab
+  - k8s
+  - dns
+---
+
+# CoreDNS Fix: Tailscale/Custom Domain Resolution Failures (ENOTFOUND)
+
+## Symptom
+
+Workloads in the cluster (e.g. Uptime Kuma) intermittently fail to resolve Tailscale/tailnet
+hostnames or custom domains served by our internal Tailscale DNS server, throwing `ENOTFOUND`
+or similar DNS resolution errors — even though the same hostnames resolve fine from local
+machines or other tailnet devices.
+
+This can happen suddenly, with no changes to application config, typically correlating with a
+restart or reschedule of the `kube-dns` (CoreDNS) pod.
+
+> Happened at around 9 pm on 2026-08-05
+
+## Root Cause
+
+By default, CoreDNS's `Corefile` includes a catch-all forwarding rule:
+
+```text
+forward . /etc/resolv.conf
+```
+
+This tells CoreDNS to forward any query it doesn't own (i.e. not `cluster.local`) to whatever
+nameservers are listed in the **node's** `/etc/resolv.conf` — read at CoreDNS pod startup.
+
+This is fragile for a few reasons:
+
+- If the CoreDNS pod restarts and gets scheduled onto a different node, it inherits that node's
+  DNS config, which may not point to our Tailscale DNS server.
+- Even when a pod's own `dnsConfig` explicitly lists our Tailscale DNS server as a secondary
+  nameserver, **glibc's resolver does not fall through to it** unless the first nameserver
+  (CoreDNS) is unreachable. If CoreDNS answers with `NXDOMAIN` (domain not found), glibc treats
+  that as final and never tries the second server.
+
+Net effect: resolution of our tailnet/custom domains depends entirely on the CoreDNS pod's node
+having correct DNS config at the moment CoreDNS started — which isn't guaranteed and isn't
+something we control directly.
+
+### Complete Corefile (pre-fix)
+
+Obtained via
+
+```bash
+kubectl -n kube-system get configmap coredns -o yaml
+```
+
+```yaml
+apiVersion: v1
+data:
+  Corefile: |
+    .:53 {
+        errors
+        health
+        ready
+        kubernetes cluster.local in-addr.arpa ip6.arpa {
+          pods insecure
+          fallthrough in-addr.arpa ip6.arpa
+        }
+        hosts /etc/coredns/NodeHosts {
+          ttl 60
+          reload 15s
+          fallthrough
+        }
+        prometheus :9153
+        cache 30
+        loop
+        reload
+        loadbalance
+        import /etc/coredns/custom/*.override
+        forward . /etc/resolv.conf
+    }
+    import /etc/coredns/custom/*.server
+  NodeHosts: |
+    192.168.178.12 heiloo
+    192.168.178.13 gouda
+    192.168.178.14 overvecht
+kind: ConfigMap
+metadata:
+  annotations:
+    objectset.rio.cattle.io/applied: ...
+    objectset.rio.cattle.io/id: ""
+    objectset.rio.cattle.io/owner-gvk: k3s.cattle.io/v1, Kind=Addon
+    objectset.rio.cattle.io/owner-name: coredns
+    objectset.rio.cattle.io/owner-namespace: kube-system
+  creationTimestamp: "2025-11-22T23:56:58Z"
+  labels:
+    objectset.rio.cattle.io/hash: ...
+  name: coredns
+  namespace: kube-system
+  resourceVersion: "129403976"
+  uid: ...
+```
+
+## Fix
+
+Configure CoreDNS to explicitly forward our tailnet domain(s) to our Tailscale DNS server,
+independent of node-level resolv.conf. This makes resolution deterministic and cluster-wide for
+all workloads, not just the one we noticed the issue on.
+
+### Steps
+
+1. View the current CoreDNS ConfigMap:
+
+   ```bash
+   kubectl -n kube-system get configmap coredns -o yaml
+   ```
+
+2. Edit it:
+
+   ```bash
+   kubectl -n kube-system edit configmap coredns
+   ```
+
+3. Add a dedicated server block for our domain(s) (including TS magic DNS), forwarding to our Tailscale DNS server IP.
+   Add this **alongside** (not inside) the existing `.:53` block:
+
+   ```text
+   internal.dmhosted.com ts.net:53 {
+       errors
+       cache 30
+       forward . <TAILSCALE_DNS_SERVER_IP>
+   }
+   .:53 {
+       errors
+       health
+       ready
+       kubernetes cluster.local in-addr.arpa ip6.arpa {
+          pods insecure
+          fallthrough in-addr.arpa ip6.arpa
+          ttl 30
+       }
+       prometheus :9153
+       forward . /etc/resolv.conf {
+          max_concurrent 1000
+       }
+       cache 30
+       loop
+       reload
+       loadbalance
+   }
+   ```
+
+   Replace:
+   - `your-tailnet-domain.com` — our custom tailnet domain
+   - `ts.net` — include if MagicDNS names also need resolving
+   - `<TAILSCALE_DNS_SERVER_IP>` — the tailnet IP of our custom Tailscale DNS server
+
+4. Save. CoreDNS has the `reload` plugin enabled, so it will pick up the ConfigMap change
+   automatically (within ~45 seconds) — **no pod restart required**.
+
+5. Verify the reload happened:
+
+   ```bash
+   kubectl -n kube-system logs -l k8s-app=kube-dns --tail=20
+   ```
+
+   Look for a `"Reloading"` log entry.
+
+6. Verify resolution from a workload pod:
+
+   ```bash
+   kubectl exec -it <pod-name> -- nslookup <tailnet-hostname>
+   ```
+
+## Why This Is the Durable Fix
+
+- Removes dependency on the CoreDNS pod's node having correct/consistent `/etc/resolv.conf`.
+- Removes dependency on per-pod `dnsConfig` secondary nameservers, which are unreliable due to
+  glibc's fallback behavior (only triggers on unreachable server, not on NXDOMAIN).
+- Fix is cluster-wide: any pod in the cluster can now resolve these domains correctly without
+  needing custom `dnsConfig` in its own deployment spec.
+
+## Related Notes
+
+- This CoreDNS ConfigMap change is cluster-scoped and will persist across CoreDNS pod
+  restarts/reschedules, since it no longer depends on node-level DNS state.
+- If our Tailscale DNS server IP ever changes, this ConfigMap must be updated to match.
+- Consider monitoring/alerting on CoreDNS pod restarts, since a restart briefly interrupts
+  DNS resolution cluster-wide during the reload.
