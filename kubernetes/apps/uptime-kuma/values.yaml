@@ -21,4 +21,4 @@ dnsConfig:
     - 100.127.99.35
   options:
     - name: ndots
-      value: "2"
+      value: "3"
