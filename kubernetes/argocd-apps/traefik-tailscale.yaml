@@ -12,9 +12,7 @@ spec:
       chart: traefik
       targetRevision: 41.2.0
       helm:
-        # The Traefik CRDs are cluster-scoped and shared with the primary traefik
-        # instance. Leave them unmanaged (same as `helm upgrade`, which never
-        # updates crds/) instead of adopting them into this Application
+        # Traefik CRDs are owned by the primary traefik instance.
         skipCrds: true
         valueFiles:
           - $values/kubernetes/traefik-tailscale/values.yaml

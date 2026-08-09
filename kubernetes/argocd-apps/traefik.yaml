@@ -13,8 +13,7 @@ spec:
       targetRevision: 41.1.0
       helm:
         releaseName: traefik
-        # TODO: 'adopt' CRDs
-        skipCrds: true
+        # CRDs are owned by this Application
         valueFiles:
           - $values/kubernetes/traefik/values.yaml
     - repoURL: https://github.com/davmacario/dmhosted-infra
