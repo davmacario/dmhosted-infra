@@ -1,3 +1,7 @@
+---
+# ProxyGroup used to provide Tailscale (ingress) access to traefik-tailscale
+# See ../traefik-tailscale/values.yaml: it is referencing this proxygroup
+# via the Service annotations
 apiVersion: tailscale.com/v1alpha1
 kind: ProxyGroup
 metadata:
