@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik-tailscale
+  namespace: argocd
+  labels:
+    name: traefik-tailscale
+spec:
+  project: default
+  sources:
+    - repoURL: https://helm.traefik.io/traefik
+      chart: traefik
+      targetRevision: 41.1.0
+      helm:
+        # The Traefik CRDs are cluster-scoped and shared with the primary traefik
+        # instance. Leave them unmanaged (same as `helm upgrade`, which never
+        # updates crds/) instead of adopting them into this Application
+        skipCrds: true
+        valueFiles:
+          - $values/kubernetes/traefik-tailscale/values.yaml
+    - repoURL: https://github.com/davmacario/dmhosted-infra
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/davmacario/dmhosted-infra
+      targetRevision: main
+      path: kubernetes/traefik-tailscale
+      directory:
+        exclude: values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: traefik-tailscale
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false
