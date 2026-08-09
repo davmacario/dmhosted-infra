@@ -1,3 +1,4 @@
+# Expose the tailscale Traefik dashboard to VPN
 ---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
@@ -20,3 +21,16 @@ spec:
           kind: TraefikService
   tls:
     secretName: traefik-dashboard-certificate-secret-internal
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: traefik-dashboard-certificate-internal
+  namespace: traefik-tailscale
+spec:
+  secretName: traefik-dashboard-certificate-secret-internal
+  issuerRef:
+    name: cloudflare-clusterissuer
+    kind: ClusterIssuer
+  dnsNames:
+    - traefik.internal.dmhosted.com

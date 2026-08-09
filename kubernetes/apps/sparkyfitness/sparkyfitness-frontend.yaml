@@ -79,9 +79,8 @@ kind: IngressRoute
 metadata:
   name: sparkyfitness-internal
   namespace: sparkyfitness
-  annotations:
-    kubernetes.io/ingress.class: traefik-tailscale
 spec:
+  ingressClassName: traefik-tailscale
   entryPoints:
     - websecure
   routes:

@@ -23,6 +23,8 @@ spec:
       targetRevision: main
       path: kubernetes/traefik-tailscale
       directory:
+        # Manifests live in the `dashboard/` subdirectory
+        recurse: true
         exclude: values.yaml
   destination:
     server: https://kubernetes.default.svc
