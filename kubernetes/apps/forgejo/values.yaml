@@ -1,0 +1,134 @@
+# yaml-language-server: $schema=https://code.forgejo.org/forgejo-helm/forgejo-helm/raw/branch/main/values.schema.json
+
+strategy:
+  type: Recreate
+  rollingUpdate:
+    maxSurge: "100%"
+    maxUnavailable: 0
+
+service:
+  http:
+    type: ClusterIP
+    port: 3000
+  ssh:
+    type: ClusterIP
+    port: 22
+
+ingress:
+  enabled: false
+httpRoute:
+  enabled: false
+tcpRoute:
+  enabled: false
+route:
+  enabled: false
+
+resources:
+  limits:
+    memory: 512Mi
+  requests:
+    memory: 128Mi
+
+deployment:
+  labels:
+    app: forgejo
+
+replicaCount: 1
+
+persistence:
+  enabled: true
+  create: true
+  mount: true
+  size: 40Gi
+  accessModes:
+    - ReadWriteMany
+  storageClass: democratic-nfs-retain
+  annotations:
+    helm.sh/resource-policy: keep
+
+gitea:
+  admin:
+    existingSecret: # TODO: define secret for admin user
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      namespace: monitoring
+      additionalLabels:
+        release: prometheus-stack # enables auto discovery
+  # Application configuration
+  config:
+    APP_NAME: "Git @ DMHosted"
+    RUN_MODE: prod
+    repository:
+      SCRIPT_TYPE: bash
+      DEFAULT_PRIVATE: latest
+      MAX_CREATION_LIMIT: 100
+      DEFAULT_BRANCH: main
+      ALLOW_FORK_WITHOUT_MAXIMUM_LIMIT: false
+    server:
+      DOMAIN: git.dmhosted.com
+      LFS_START_SERVER: true
+      SSH_DOMAIN: git.dmhosted.com
+      SSH_PORT: 22
+    cors:
+      ENABLED: true
+      ALLOW_DOMAIN: https://*.dmhosted.com
+    database: # TODO: configure DB cluster and pass creds
+      DB_TYPE: postgres
+      HOST: forgejo-db-rw.forgejo.cluster.local:5432
+      NAME: forgejo
+      USER: forgejo
+      # NOTE: Password passed as secret
+    admin:
+      SEND_NOTIFICATION_EMAIL_ON_NEW_USER: true
+    security:
+      INSTALL_LOCK: true
+      GLOBAL_TWO_FACTOR_REQUIREMENT: none # TODO: enable and set to 'all'
+      PASSWORD_COMPLEXITY: lower,upper,digit,spec
+    service:
+      DISABLE_REGISTRATION: true # Only admins can create new users
+      REQUIRE_SIGNIN_VIEW: false # default. Allows read-only access (to public
+                                 # stuff) without login/account
+      DEFAULT_KEEP_EMAIL_PRIVATE: true
+      ENABLE_NOTIFY_MAIL: true
+    service.explore:
+      REQUIRE_SIGNIN_VIEW: false # default. Allow viewing public info without
+                                 # login
+    mailer:
+      ENABLED: true
+      PROTOCOL: smtp+starttls
+      SMTP_ADDR: smtp-relay.brevo.com
+      SMTP_PORT: 587
+      FROM: git@dmhosted.com
+      ENVELOPE_FROM: Forgejo
+    email.incoming:
+      ENABLED: false
+    actions:
+      ENABLED: true
+
+    packages:
+      ENABLED: true
+
+    storage:
+      STORAGE_TYPE: minio
+      # NOTE: serving S3 API over k8s service - might need to revise it in the
+      # future (many ways this could break)
+      MINIO_ENDPOINT: rustfs.internal.dmhosted.com
+      MINIO_BUCKET: forgejo
+      MINIO_LOCATION: eu-west-1
+      MINIO_USE_SSL: true
+
+  # Other configuration sources: configmap for non-sensitive, secret for
+  # sensitive
+  additionalConfigSources:
+    - secret:
+        secretName: forgejo-config-secrets
+
+# Basic check on configuration flagging deprecated entries
+checkDeprecation: true
+test:
+  enabled: true
+  image:
+    name: busybox
+    tag: latest
