@@ -288,6 +288,6 @@ kubectl config set-context <proxygroup_url>
 
 2 possible approaches work for me:
 
-1. If exposing a non-HTTP service, follow the [docs]().
+1. If exposing a non-HTTP service, follow the [docs](https://tailscale.com/docs/kubernetes-operator/ingress).
    This will create a "registered" Tailscale service, with a dedicated tailscale IP.
 2. If exposing HTTP services, follow the guide in [./k8s-tailscale-custom-dns.md](./k8s-tailscale-custom-dns.md), where I explain how to set up a "secondary" Traefik instance in the cluster that maps to a Tailscale IP, allowing you to define custom domain names for different applications (and use host-based routing).
