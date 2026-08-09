@@ -1,0 +1,39 @@
+# Values for Tailscale Operator Helm chart
+# The chart is deployed via ArgoCD and updates have to be approved manually
+# which make it okay to not hardcode the image tags
+# In general, this prevents running an outdated version of tailscale, which is
+# considered insecure
+
+# Manually defined `operator-oauth` secret - managed externally
+oauth: {}
+oauthSecretVolume: {}
+
+installCRDs: true
+
+operatorConfig:
+  affinity: {}
+  defaultTags:
+  - tag:k8s-operator
+  hostname: tailscale-operator
+  image:
+    pullPolicy: Always
+    repository: tailscale/k8s-operator
+    tag: ""  # Trust with latest version
+  logging: warning
+  nodeSelector:
+    kubernetes.io/os: linux
+
+apiServerProxyConfig:
+  allowImpersonation: "true"
+  mode: "false"
+
+ingressClass:
+  enabled: true
+  name: tailscale
+
+proxyConfig:
+  defaultTags: tag:k8s
+  firewallMode: auto
+  image:
+    repository: tailscale/tailscale
+    tag: ""  # Trust with latest version
