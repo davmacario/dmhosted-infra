@@ -153,17 +153,21 @@ kubectl get svc -n traefik-tailscale
 To display information about the `LoadBalancer` service:
 
 ```text
-NAME                TYPE           CLUSTER-IP      EXTERNAL-IP                                                           PORT(S)                      AGE
-traefik-tailscale   LoadBalancer   10.43.240.238   100.106.143.84,traefik-tailscale-traefik-tailscale.taila7b4c.ts.net   80:32446/TCP,443:31390/TCP   5m26s
+NAME                           TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)                      AGE
+traefik-tailscale              LoadBalancer   10.43.240.238   100.84.247.181   80:32446/TCP,443:31390/TCP   176d
 ```
 
 This confirms that the Tailscale IP was assigned correctly.
+
+This means that any service exposed over this Traefik instance will use this IP "underneath".
+In other words, to successfully expose services over Tailscale (with Traefik), we need to
+configure our DNS server to respond to queries for our custom domains with that IP.
 
 ### Testing IngressRoute over Tailscale
 
 Next, we will deploy an IngressRoute CRD to expose Nginx over the Tailnet.
 
-First, create a certificate (optional) using the `ClusterIssuer` created in [[traefik-setup-k3s#Issuer configuration]].
+First, create a certificate (optional) using the `ClusterIssuer` created in [this guide](/docs/traefik-setup.md#issuer-configuration).
 We will expose Nginx internally (within tailnet) at the address `nginx.internal.dmhosted.com`.
 
 ```yaml
@@ -209,6 +213,61 @@ spec:
   tls:
     secretName: nginx-certificate-secret-prod-internal
 ```
+
+Flow:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor C as Tailnet client
+    participant TS as Tailscale client<br/>(MagicDNS / split DNS)
+    participant DNS as AdGuardHome<br/>(LAN DNS server)
+    participant PG as ProxyGroup pod<br/>ingress-proxies-traefik<br/>(1 of 2 replicas)
+    participant SVC as Service<br/>traefik-tailscale
+    participant TR as Traefik pod<br/>(ns traefik-tailscale)
+    participant NS as Service nginx<br/>(ns nginx)
+    participant N as nginx pod
+
+    rect rgb(240, 245, 255)
+        Note over C,DNS: 1. Name resolution
+        C->>TS: resolve nginx.internal.dmhosted.com
+        TS->>DNS: split DNS: dmhosted.com is delegated to AdGuardHome
+        DNS-->>TS: A 100.84.247.181
+        TS-->>C: A 100.84.247.181<br/>(Tailscale IP of the LoadBalancer Service)
+    end
+
+    rect rgb(240, 255, 245)
+        Note over C,PG: 2. Transport over the tailnet
+        C->>PG: HTTPS (TCP/443) to 100.84.247.181,<br/>encrypted inside the WireGuard tunnel
+        Note right of PG: The Tailscale IP belongs to the ProxyGroup,<br/>which advertises the Tailscale Service.<br/>Either replica can accept the connection
+    end
+
+    rect rgb(255, 250, 240)
+        Note over PG,N: 3. Inside the cluster
+        PG->>SVC: forward to the ClusterIP (10.43.240.238:443)
+        SVC->>TR: kube-proxy load-balances to a Traefik pod
+        Note right of TR: TLS terminated with<br/>nginx-certificate-secret-prod-internal<br/>(issued by cert-manager)
+        TR->>TR: match Host(nginx.internal.dmhosted.com)<br/>against the IngressRoute rules
+        TR->>NS: HTTP (plain) to nginx:80
+        NS->>N: to a healthy nginx pod
+    end
+
+    N-->>TR: 200 OK
+    TR-->>PG: 200 OK (re-encrypted with the Traefik cert)
+    PG-->>C: response back through the tunnel
+```
+
+A few things worth pointing out:
+
+- The client never talks to the cluster network directly: as far as it is concerned, the
+  destination is just another node on the tailnet (`100.84.247.181`).
+- The DNS answer is what binds the custom domain to Traefik. Everything after that is
+  standard Traefik routing, hence the `Host(...)` match in the `IngressRoute`.
+- A request on port `80` is answered by Traefik with a permanent redirect to `443`
+  (see the `web` entrypoint in the [values](#installing-traefik-via-helm)), so the flow
+  above is entered again over HTTPS.
+- Since the `ProxyGroup` has `replicas: 2`, step 2 tolerates the loss of one proxy pod (or
+  one node) without dropping the ingress path.
 
 ### Exposing Traefik Dashboard
 
