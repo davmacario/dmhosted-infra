@@ -16,9 +16,8 @@ kind: IngressRoute
 metadata:
   name: uptime-kuma-ingressroute-tailscale
   namespace: uptime-kuma
-  annotations:
-    kubernetes.io/ingress.class: traefik-tailscale
 spec:
+  ingressClassName: traefik-tailscale
   entryPoints:
     - websecure
   routes:

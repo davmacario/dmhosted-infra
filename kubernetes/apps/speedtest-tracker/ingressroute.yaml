@@ -16,9 +16,8 @@ kind: IngressRoute
 metadata:
   name: speedtest-tracker-ingressroute-tailscale
   namespace: speedtest-tracker
-  annotations:
-    kubernetes.io/ingress.class: traefik-tailscale
 spec:
+  ingressClassName: traefik-tailscale
   entryPoints:
     - websecure
   routes:

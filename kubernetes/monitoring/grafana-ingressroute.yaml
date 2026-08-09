@@ -16,9 +16,8 @@ kind: IngressRoute
 metadata:
   name: grafana-internal
   namespace: monitoring
-  annotations:
-    kubernetes.io/ingress.class: traefik-tailscale
 spec:
+  ingressClassName: traefik-tailscale
   entryPoints:
     - websecure
   routes:

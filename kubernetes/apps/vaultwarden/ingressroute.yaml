@@ -16,9 +16,8 @@ kind: IngressRoute
 metadata:
   name: vaultwarden-internal
   namespace: vaultwarden
-  annotations:
-    kubernetes.io/ingress.class: traefik-tailscale
 spec:
+  ingressClassName: traefik-tailscale
   entryPoints:
     - websecure
   routes:

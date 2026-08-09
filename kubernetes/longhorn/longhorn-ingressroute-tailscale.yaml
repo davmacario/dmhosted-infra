@@ -4,9 +4,8 @@ kind: IngressRoute
 metadata:
   name: longhorn-ingressroute-tailscale
   namespace: longhorn-system
-  annotations:
-    kubernetes.io/ingress.class: traefik-tailscale
 spec:
+  ingressClassName: traefik-tailscale
   entryPoints:
     - websecure
   routes:

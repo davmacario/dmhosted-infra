@@ -20,9 +20,8 @@ metadata:
   namespace: firefly-iii
   labels:
     app: firefly-iii
-  annotations:
-    kubernetes.io/ingress.class: traefik-tailscale
 spec:
+  ingressClassName: traefik-tailscale
   entryPoints:
     - websecure
   routes:

@@ -34,9 +34,8 @@ kind: IngressRoute
 metadata:
   name: rustfs-nas-data
   namespace: networking
-  annotations:
-    kubernetes.io/ingress.class: traefik-tailscale
 spec:
+  ingressClassName: traefik-tailscale
   entryPoints:
     - websecure
   routes:
@@ -66,9 +65,8 @@ kind: IngressRoute
 metadata:
   name: rustfs-nas-ui
   namespace: networking
-  annotations:
-    kubernetes.io/ingress.class: traefik-tailscale
 spec:
+  ingressClassName: traefik-tailscale
   entryPoints:
     - websecure
   routes:

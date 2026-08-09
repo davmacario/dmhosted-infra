@@ -16,9 +16,8 @@ kind: IngressRoute
 metadata:
   name: stirling-pdf-ingressroute-tailscale
   namespace: stirling-pdf
-  annotations:
-    kubernetes.io/ingress.class: traefik-tailscale
 spec:
+  ingressClassName: traefik-tailscale
   entryPoints:
     - websecure
   routes:
