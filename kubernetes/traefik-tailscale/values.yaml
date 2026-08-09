@@ -67,7 +67,11 @@ service:
   type: LoadBalancer
   spec:
     loadBalancerClass: tailscale
-  annotations: {}
+  annotations:
+    # Links the Service to the ProxyGroup
+    tailscale.com/proxy-group: ingress-proxies-traefik
+    # Sets the MagicDNS hostname for the Tailscale Service
+    tailscale.com/hostname: traefik-tailscale
   labels: {}
   loadBalancerSourceRanges: []
   externalIPs: []

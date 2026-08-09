@@ -30,7 +30,48 @@ Then, use `external-dns` to automatically configure DNS records pointing to thos
 Since Traefik is [already running on the cluster](./traefik-setup.md), we need to deploy a parallel installation, in a different namespace.
 We will still use Helm.
 
+### Configuring Tailscale (`ProxyGroup`)
+
+In order to allow Traefik to accept traffic over Tailscale, we need to define the proper
+resources via the Tailscale Operator.
+This assumes the operator is installed following the steps in the [installation guide](./tailscale-operator.md).
+
+We need to define a `ProxyGroup` (Tailscale CRD) to proxy Tailscale traffic towards Traefik.
+To reliably expose services, we would like to avoid single points of failure in the
+networking setup, and as such it would be preferred to have 2 proxy containers defined,
+i.e., a `ProxyGroup` with `replicas: 2` (or more - having 2 allows to avoid downtime when
+performing rolling reboots and tolerating up to 1 node failure).
+
+[Here](../kubernetes/tailscale-operator/proxygroup-ingress-traefik.yaml) is the definition:
+
+```yaml
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyGroup
+metadata:
+  name: ingress-proxies-traefik
+spec:
+  type: ingress
+  replicas: 2
+```
+
+### Installing Traefik (via Helm)
+
 The name of this IngressController will be `traefik-tailscale`.
+
+Following the [Tailscale Operator docs](https://tailscale.com/docs/kubernetes-operator/ingress/expose-workload-to-tailnet-l3#expose-the-service-with-l3-ingress),
+in order to use the `ProxyGroup` created in the [previous section](#deploying-another-traefik-ingresscontroller),
+we need to:
+
+1. Set the service type to `LoadBalancer`
+2. Set the load balancer class to `tailscale`
+3. Set the following _annotations_ on the `Service`:
+
+   ```yaml
+   # Links the Service to the ProxyGroup
+   tailscale.com/proxy-group: ingress-proxies-traefik
+   # Sets the MagicDNS hostname for the Tailscale Service
+   tailscale.com/hostname: traefik-tailscale
+   ```
 
 Values:
 
@@ -82,7 +123,11 @@ service:
   type: LoadBalancer
   spec:
     loadBalancerClass: tailscale
-  annotations: {}
+  annotations:
+    # Links the Service to the ProxyGroup
+    tailscale.com/proxy-group: ingress-proxies-traefik
+    # Sets the MagicDNS hostname for the Tailscale Service
+    tailscale.com/hostname: traefik-tailscale
   labels: {}
   loadBalancerSourceRanges: []
   externalIPs: []

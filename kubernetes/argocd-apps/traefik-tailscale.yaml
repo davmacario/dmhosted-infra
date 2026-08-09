@@ -10,7 +10,7 @@ spec:
   sources:
     - repoURL: https://helm.traefik.io/traefik
       chart: traefik
-      targetRevision: 41.1.0
+      targetRevision: 41.2.0
       helm:
         # The Traefik CRDs are cluster-scoped and shared with the primary traefik
         # instance. Leave them unmanaged (same as `helm upgrade`, which never
