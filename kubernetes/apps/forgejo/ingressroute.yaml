@@ -28,7 +28,7 @@ spec:
     - match: Host(`forgejo.dmhosted.com`)
       kind: Rule
       services:
-        - name: forgejo
+        - name: forgejo-http
           port: 3000
   tls:
     secretName: forgejo-cert
