@@ -107,8 +107,7 @@ gitea:
       PROTOCOL: smtp+starttls
       SMTP_ADDR: smtp-relay.brevo.com
       SMTP_PORT: 587
-      FROM: forgejo@dmhosted.com
-      ENVELOPE_FROM: Forgejo
+      FROM: "Forgejo <forgejo@dmhosted.com>"
     email.incoming:
       ENABLED: false
     actions:
