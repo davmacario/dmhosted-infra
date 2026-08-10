@@ -72,8 +72,9 @@ gitea:
       DEFAULT_BRANCH: main
       ALLOW_FORK_WITHOUT_MAXIMUM_LIMIT: false
     server:
-      PROTOCOL: https
+      PROTOCOL: http
       DOMAIN: forgejo.dmhosted.com
+      ROOT_URL: https://forgejo.dmhosted.com/
       LFS_START_SERVER: true
       SSH_DOMAIN: forgejo.dmhosted.com
       SSH_PORT: 22
