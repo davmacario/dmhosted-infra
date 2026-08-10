@@ -1,5 +1,10 @@
 # yaml-language-server: $schema=https://code.forgejo.org/forgejo-helm/forgejo-helm/raw/branch/main/values.schema.json
 
+image:
+  registry: code.forgejo.org
+  repository: forgejo/forgejo
+  tag: 16.0.2
+
 strategy:
   type: Recreate
   rollingUpdate:
@@ -48,7 +53,7 @@ persistence:
 
 gitea:
   admin:
-    existingSecret: # TODO: define secret for admin user
+    existingSecret: forgejo-admin-secret
   metrics:
     enabled: true
     serviceMonitor:
@@ -67,16 +72,16 @@ gitea:
       DEFAULT_BRANCH: main
       ALLOW_FORK_WITHOUT_MAXIMUM_LIMIT: false
     server:
-      DOMAIN: git.dmhosted.com
+      DOMAIN: forgejo.dmhosted.com
       LFS_START_SERVER: true
-      SSH_DOMAIN: git.dmhosted.com
+      SSH_DOMAIN: forgejo.dmhosted.com
       SSH_PORT: 22
     cors:
       ENABLED: true
       ALLOW_DOMAIN: https://*.dmhosted.com
     database: # TODO: configure DB cluster and pass creds
       DB_TYPE: postgres
-      HOST: forgejo-db-rw.forgejo.cluster.local:5432
+      HOST: forgejo-db-rw:5432
       NAME: forgejo
       USER: forgejo
       # NOTE: Password passed as secret
@@ -88,24 +93,28 @@ gitea:
       PASSWORD_COMPLEXITY: lower,upper,digit,spec
     service:
       DISABLE_REGISTRATION: true # Only admins can create new users
-      REQUIRE_SIGNIN_VIEW: false # default. Allows read-only access (to public
-                                 # stuff) without login/account
+      REQUIRE_SIGNIN_VIEW:
+        false # default. Allows read-only access (to public
+        # stuff) without login/account
       DEFAULT_KEEP_EMAIL_PRIVATE: true
       ENABLE_NOTIFY_MAIL: true
     service.explore:
-      REQUIRE_SIGNIN_VIEW: false # default. Allow viewing public info without
-                                 # login
+      REQUIRE_SIGNIN_VIEW:
+        false # default. Allow viewing public info without
+        # login
     mailer:
       ENABLED: true
       PROTOCOL: smtp+starttls
       SMTP_ADDR: smtp-relay.brevo.com
       SMTP_PORT: 587
-      FROM: git@dmhosted.com
+      FROM: forgejo@dmhosted.com
       ENVELOPE_FROM: Forgejo
     email.incoming:
       ENABLED: false
     actions:
       ENABLED: true
+      ARTIFACTS_RETENTION_DAYS: 60
+      LOG_RETENTION_DAYS: 180
 
     packages:
       ENABLED: true
