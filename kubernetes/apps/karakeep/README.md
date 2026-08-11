@@ -1,4 +1,14 @@
-# Kubernetes installation with Kustomize
+---
+id: karakeep
+author: Davide Macario
+date: 2026-06-22
+tags:
+  - homelab
+  - k3s
+  - app
+---
+
+# Kubernetes Installation with Kustomize
 
 Before installing for the 1st time:
 

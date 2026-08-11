@@ -2,14 +2,13 @@
 id: k3s-version-upgrade
 author: Davide Macario
 date: 2026-06-11
-aliases: []
 tags:
   - k8s
   - k3s
   - homelab
 ---
 
-# Upgrading k3s version (using Ansible)
+# Upgrading K3s Version (Using Ansible)
 
 **Issue**: the 'k3s-ansible' repo by TechnoTim has not been updated in a while, and attempting to upgrade from k3s 1.33 is not working.
 Luckily, the community came to the rescue, and [this fork](https://github.com/panoptikoe/k3s-ansible) saved the day.

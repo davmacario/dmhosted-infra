@@ -2,14 +2,13 @@
 id: tailscale-operator
 author: Davide Macario
 date: 2026-02-13
-aliases: []
 tags:
   - k3s
   - homelab
   - tailscale
 ---
 
-# Setting up the Tailscale Kubernetes Operator
+# Setting Up the Tailscale Kubernetes Operator
 
 [Docs](https://tailscale.com/kb/1236/kubernetes-operator).
 
@@ -73,7 +72,7 @@ helm upgrade \
   --wait
 ```
 
-> [!note]
+> [!NOTE]
 >
 > The `apiServerProxyConfig.allowImpersonation` value will be used for [setting up access to the kube API over Tailscale](#access-the-kubernetes-control-plane-using-an-api-server-proxy).
 
@@ -91,7 +90,7 @@ helm upgrade \
 
 You should now be able to see a node named "tailscale-operator" in your [Machines](https://login.tailscale.com/admin/machines) page.
 
-> [!DANGER]
+> [!CAUTION]
 >
 > By running
 >
@@ -112,7 +111,6 @@ You should now be able to see a node named "tailscale-operator" in your [Machine
 >
 > Since the configuration of the operator contains secrets (`oauth.clientSecret`), though, it is
 > recommended to remove the secret values before committing the file to Git.
-> `
 
 ## Pre-creating a `ProxyGroup`
 
@@ -201,7 +199,7 @@ Requirements:
 >
 > In order to be able to reach the Kube API from a specific Tailnet device, you must assign it the tag `tag:k8s-readers`.
 
-Then, apply [this](./kubernetes/tailscale-operator/proxygroup-apiserver.yaml) manifest file to create a set of Tailscale devices acting as API server proxies (using 2 replicas).
+Then, apply [this](../kubernetes/tailscale-operator/proxygroup-apiserver.yaml) manifest file to create a set of Tailscale devices acting as API server proxies (using 2 replicas).
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1

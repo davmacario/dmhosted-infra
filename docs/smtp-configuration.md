@@ -2,12 +2,11 @@
 id: smtp-configuration
 author: Davide Macario
 date: 2026-06-13
-aliases: []
 tags:
   - homelab
 ---
 
-# SMTP configuration
+# SMTP Configuration
 
 Needed for [Vaultwarden](./vaultwarden-setup.md).
 

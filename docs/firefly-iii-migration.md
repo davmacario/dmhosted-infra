@@ -1,6 +1,16 @@
+---
+id: firefly-iii-migration
+author: Davide Macario
+date: 2026-06-22
+tags:
+  - homelab
+  - k3s
+  - database
+---
+
 # Migrating Firefly-III
 
-From: Docker container(s) running on single host, and using MySQL.
+From: Docker container(s) running on single host (Raspberry Pi), and using MySQL.
 
 To: K8s, using PostgreSQL (CNPG).
 
@@ -10,7 +20,7 @@ No loss of data, and (optionally) extra features.
 
 Log into DB container, and run `mariadb-dump` of the `firefly` database.
 
-> [!tip]
+> [!TIP]
 >
 > I mounted a new path onto the container so that I could put the backup .sql there
 

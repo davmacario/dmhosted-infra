@@ -2,7 +2,6 @@
 id: coredns-fix-tailscale
 author: Davide Macario
 date: 2026-08-06
-aliases: []
 tags:
   - homelab
   - k8s
@@ -111,7 +110,7 @@ Configure CoreDNS to explicitly forward our internal (VPN) domain(s) to our Tail
 independent of node-level resolv.conf. This makes resolution deterministic and cluster-wide for
 all workloads, not just the one we noticed the issue on.
 
-> [!note]
+> [!NOTE]
 >
 > This is a _permanent_ fix that overrides the local node DNS config from within pods.
 > This does _not_ have any effect on the nodes' DNS settings.

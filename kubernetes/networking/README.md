@@ -1,4 +1,14 @@
-# Networking configuration on k8s
+---
+id: networking-k8s
+author: Davide Macario
+date: 2026-06-22
+tags:
+  - homelab
+  - k8s
+  - networking
+---
+
+# Networking Configuration on K8s
 
 The manifests found here are used to set up networking in the homelab.
 

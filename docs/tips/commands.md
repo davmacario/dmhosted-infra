@@ -2,12 +2,11 @@
 id: commands
 author: Davide Macario
 date: 2026-07-09
-aliases: []
 tags:
   - kubernetes
 ---
 
-# Useful commands
+# Useful Commands
 
 ## Kubectl
 

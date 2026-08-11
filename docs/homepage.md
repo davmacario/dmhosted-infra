@@ -2,13 +2,12 @@
 id: homepage
 author: Davide Macario
 date: 2026-02-14
-aliases: []
 tags:
   - homelab
   - k3s
 ---
 
-# Homepage setup - K8s cluster
+# Homepage Setup - K8s Cluster
 
 [Homepage](https://gethomepage.dev/) is a customizable application dashboard for your homelab.
 

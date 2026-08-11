@@ -2,7 +2,6 @@
 id: longhorn
 author: Davide Macario
 date: 2026-02-14
-aliases: []
 tags:
   - homelab
   - k3s
@@ -10,7 +9,7 @@ tags:
   - data
 ---
 
-# Longhorn storage provider
+# Longhorn Storage Provider
 
 ## Installing Longhorn
 
@@ -28,12 +27,12 @@ Verify namespace creation:
 kubectl get namespaces | grep longhorn
 ```
 
-To ensure the requirements are installed, run the [install_cluster.yml](./playbooks/install_cluster.yml) playbook.
+To ensure the requirements are installed, run the [install_cluster.yml](../playbooks/install_cluster.yml) playbook.
 
 Additionally, it is possible to install the Longhorn Command Line Tool, following the [documentation](https://longhorn.io/docs/1.10.1/deploy/install/#longhorn-command-line-tool).
 Then, run it to check and install dependencies.
 
-> [!note]
+> [!NOTE]
 >
 > This can be done on 1 machine (either your host machine or a cluster server node).
 > Dependencies will be installed on all nodes.
@@ -70,7 +69,7 @@ kubectl -n longhorn-system get pods
 
 Next, set up Ingress for the Longhorn UI.
 
-> [!tip]
+> [!TIP]
 >
 > You can edit the value of `spec.rules[0].host` to any value you like.
 > We will use local DNS (at this stage) to forward traffic directed at that domain name to the Traefik LB IP (192.168.178.20 in my case).
@@ -79,10 +78,10 @@ Next, set up Ingress for the Longhorn UI.
 kubectl apply -f ./kubernetes/longhorn/longhorn-ingress.yaml
 ```
 
-> [!note]
+> [!NOTE]
 >
 > Unlike the set up for the Traefik UI, we are not setting up any middleware for auth in this case.
-> You can follow the same steps as in [[traefik-setup-k3s]] to do so.
+> You can follow the same steps as in [Traefik setup](./traefik-setup.md#setting-up-dashboard-access) to do so.
 
 Then, edit the contents of `/etc/hosts` by adding:
 

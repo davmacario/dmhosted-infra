@@ -1,3 +1,13 @@
+---
+id: postgres-major-version-upgrade-cnpg
+author: Davide Macario
+date: 2026-06-22
+tags:
+  - homelab
+  - k3s
+  - databases
+---
+
 # PostgreSQL Major Version Upgrade - CNPG
 
 **Goal**: upgrade PostgreSQL version from 15 to 18 for the [SparkyFitness database](../kubernetes/apps/sparkyfitness/database.yaml).

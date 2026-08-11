@@ -2,7 +2,6 @@
 id: argocd
 author: Davide Macario
 date: 2026-06-18
-aliases: []
 tags:
   - homelab
   - cicd
@@ -117,7 +116,7 @@ spec:
     secretName: argocd-server-internal-cert
 ```
 
-See [here](../kubernetes/apps/argocd/ingress.yaml) for the full manifest (including the _Certificate_).
+See [here](../kubernetes/apps/argocd/argocd-ingressroute.yaml) for the full manifest (including the _Certificate_).
 
 ## First login
 
@@ -163,7 +162,7 @@ argocd cluster list
 
 ### Create an application from the CLI
 
-> [!DANGER]
+> [!CAUTION]
 >
 > Discouraged - follow [declarative setup guide](#declarative-setup).
 

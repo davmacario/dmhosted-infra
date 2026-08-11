@@ -2,7 +2,6 @@
 id: sealed-secrets
 author: Davide Macario
 date: 2026-06-18
-aliases: []
 tags:
   - homelab
   - secrets

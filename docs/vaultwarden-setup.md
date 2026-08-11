@@ -2,7 +2,6 @@
 id: vaultwarden-setup
 author: Davide Macario
 date: 2026-03-11
-aliases: []
 tags:
   - homelab
   - k3s
@@ -125,7 +124,7 @@ Then, provide your admin token created [before](#admin-token).
 
 ### SMTP
 
-See [SMTP configuration](./smtp-configuration.md)
+See [SMTP Configuration](./smtp-configuration.md)
 
 ---
 

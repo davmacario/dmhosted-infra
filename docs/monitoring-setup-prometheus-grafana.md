@@ -2,7 +2,6 @@
 id: monitoring-setup-prometheus-grafana
 author: Davide Macario
 date: 2026-02-28
-aliases: []
 tags:
   - homelab
   - k3s
@@ -11,6 +10,9 @@ tags:
 ---
 
 # Monitoring Setup with Prometheus and Grafana
+
+This guide explains the installation steps and configuration of the [Kube-Prometheus Stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack),
+used as monitoring and observability setup in my Kubernetes cluster.
 
 ## Tech stack
 
@@ -116,7 +118,7 @@ Then, create a `ServiceMonitor` resource that:
 
     then, you have to set that label in your `ServiceMonitor` object's metadata.
 
-> [!tip]
+> [!TIP]
 >
 > To verify that discovery was successful, log into Prometheus' UI by running:
 > `kubectl -n monitoring port-forward svc/prometheus-operated 9090:9090`
@@ -463,6 +465,10 @@ Explaination:
 #### Configuring alerting rules in Prometheus
 
 > TODO
+
+> [!NOTE]
+>
+> The Kube-Prometheus stack comes with some default alert rules which are good enough to start.
 
 ---
 

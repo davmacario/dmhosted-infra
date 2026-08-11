@@ -1,8 +1,7 @@
 ---
-id: README
+id: stirling-pdf
 author: Davide Macario
 date: 2026-02-18
-aliases: []
 tags:
   - homelab
   - k3s

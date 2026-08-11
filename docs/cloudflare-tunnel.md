@@ -2,14 +2,13 @@
 id: cloudflare-tunnel
 author: Davide Macario
 date: 2026-04-07
-aliases: []
 tags:
   - k3s
   - cloudflare
   - homelab
 ---
 
-# Cloudflare Tunnel for ingress K8s traffic
+# Cloudflare Tunnel for Ingress K8s Traffic
 
 Goal: setting up Cloudflare Tunnel for sample application ("whoami"), making it accessible from the public internet without needing to open ports on the router.
 

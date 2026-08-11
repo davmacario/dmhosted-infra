@@ -2,7 +2,6 @@
 id: csi-driver-nfs
 author: Davide Macario
 date: 2026-06-15
-aliases: []
 tags:
   - homelab
   - storage

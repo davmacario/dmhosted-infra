@@ -2,12 +2,11 @@
 id: todo
 author: Davide Macario
 date: 2026-02-14
-aliases: []
 tags:
   - homelab
 ---
 
-# TODO list
+# TODO List
 
 - [x] Set up basic auth middleware in front of dashboards
 - [x] Validate Longhorn installation
@@ -32,7 +31,7 @@ tags:
   - [x] Figure out best way to easily but safely expose services to the public internet via Cloudflare tunnels
 - [x] Vaultwarden
   - [x] Decide on advanced setup (2FA)
-  - [ ] Set up email notification
+  - [x] Set up email notification
 - [x] Upgrade Longhorn
 - [x] Configure NAS (TrueNAS)
   - Look into Terraform for this ([provider](https://registry.terraform.io/providers/PjSalty/truenas/latest/docs/guides/kubernetes-storage))
@@ -41,17 +40,17 @@ tags:
 - [ ] Install [Authentik](https://docs.goauthentik.io/install-config/install/kubernetes/)
 - [ ] Install Open WebUI (and migrate from Puppydm01)
 - [ ] Personal notes setup
-  - [ ] Finalize RAG implementation
+  - [x] Finalize RAG implementation
   - [ ] Define requirements (access, devices, format, Obsidian/not, centralized vs. decentralized)
   - [ ] Create design (includes: storage backend, sync mechanism)
 - [ ] Install kube operator for volume snapshots
 - [x] Install democratic CSI for NFS storage
   - [ ] Support snapshots
-- [ ] Install [CSI-driver-NFS](https://github.com/kubernetes-csi/csi-driver-nfs)
+- [x] Install [CSI-driver-NFS](https://github.com/kubernetes-csi/csi-driver-nfs)
   - Only if democratic-CSI does not add support for new TrueNAS API
 - [x] Switch to [kubeseal](https://kubeseal.com/) for secrets management
-- [ ] Set up hosted Git (Forgejo looks like the best)
-- [ ] ArgoCD
+- [x] Set up hosted Git (Forgejo looks like the best)
+- [x] ArgoCD
 - [ ] Configure CICD environment where to run homelab-related deployments
 - [ ] Syncthing
   - I expect the setup to be a tiny bit more complicated, as it will need a LoadBalancer service type (it is not HTTP...)

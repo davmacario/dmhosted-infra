@@ -2,7 +2,6 @@
 id: forgejo
 author: Davide Macario
 date: 2026-07-24
-aliases: []
 tags:
   - homelab
   - app

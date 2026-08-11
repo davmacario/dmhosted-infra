@@ -2,7 +2,6 @@
 id: cloudnativepg
 author: Davide Macario
 date: 2026-03-02
-aliases: []
 tags:
   - homelab
   - k3s
@@ -101,7 +100,7 @@ This will take some time, as it is required to:
 3. Create DB pod
 4. ...and repeat for each of the replicas
 
-> [!tip]
+> [!TIP]
 >
 > For the full API definition for Cluster resources, see [docs](https://cloudnative-pg.io/docs/1.28/cloudnative-pg.v1/#cluster)
 
@@ -195,7 +194,7 @@ kubectl get secrets -n database-test
 
 Resulting in:
 
-```txt
+```text
 NAME                       TYPE                       DATA   AGE
 demo-cluster-app           kubernetes.io/basic-auth   11     21m
 demo-cluster-ca            Opaque                     2      21m
@@ -234,7 +233,7 @@ data:
   username: YXBw
 ```
 
-> [!tip]
+> [!TIP]
 >
 > Using `k9s`, it is possible to easily decode secrets (press `x` when selecting a secret).
 
@@ -260,7 +259,7 @@ The values can be passed to the application (**by referencing the secret itself!
 As for how to set up networking, the CNPG operator also creates Service resources for our DB.
 Running `k get svc -n database-test` returns:
 
-```txt
+```text
 NAME              TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
 demo-cluster-r    ClusterIP   10.43.192.11    <none>        5432/TCP   25m
 demo-cluster-ro   ClusterIP   10.43.239.139   <none>        5432/TCP   25m
@@ -279,7 +278,7 @@ This means that, if we want to connect to a DB from a Pod in k8s, we can just gr
 
 ## Backing up CNPG Clusters
 
-> [!note]
+> [!NOTE]
 >
 > This section will use RustFS (S3 compatible storage) running on the NAS.
 > See [NAS setup guide](./setting-up-truenas.md)

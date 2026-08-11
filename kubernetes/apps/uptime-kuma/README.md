@@ -1,15 +1,14 @@
 ---
-id: README
+id: uptime-kuma
 author: Davide Macario
 date: 2026-02-18
-aliases: []
 tags:
   - homelab
   - k3s
   - monitoring
 ---
 
-# Uptime-Kuma deployment
+# Uptime-Kuma Deployment
 
 Using [helm chart](https://github.com/dirsigler/uptime-kuma-helm).
 

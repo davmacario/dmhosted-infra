@@ -1,14 +1,13 @@
 ---
-id: README
+id: sparkyfitness
 author: Davide Macario
 date: 2026-02-21
-aliases: []
 tags:
   - k3s
   - homelab
 ---
 
-# SparkyFitness installation on cluster
+# SparkyFitness Installation on Cluster
 
 > [SparkyFitness - GitHub repo](https://github.com/CodeWithCJ/SparkyFitness)
 
@@ -143,7 +142,7 @@ Considerations:
 
   This will be referenced in the value of `POSTGRES_PASSWORD`
 
-  > [!tip]
+  > [!TIP]
   >
   > Since K8s Secrets must be encoded in b64, you can do it by running `echo -n "your-secret-here" | base64`
 
@@ -221,7 +220,7 @@ kubectl run -i --tty dns-test --image=busybox --restart=Never --rm /bin/sh
 
 From there, you can run `nslookup` to check reachability:
 
-```sh
+```bash
 nslookup my-db.default.svc.cluster.local
 ```
 

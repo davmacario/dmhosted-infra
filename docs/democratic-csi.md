@@ -2,7 +2,6 @@
 id: democratic-csi
 author: Davide Macario
 date: 2026-06-13
-aliases: []
 tags:
   - homelab
   - storage

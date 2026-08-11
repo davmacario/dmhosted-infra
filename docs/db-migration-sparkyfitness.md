@@ -2,14 +2,13 @@
 id: db-migration-sparkyfitness
 author: Davide Macario
 date: 2026-03-09
-aliases: []
 tags:
   - homelab
   - k3s
   - database
 ---
 
-# Database migration for Sparkyfitness
+# Database Migration for Sparkyfitness
 
 **Goal**: migrate Sparkyfitness' database (PostgreSQL) from a `StatefulSet` to a CloudNativePG `Cluster` (without losing data).
 
@@ -170,7 +169,7 @@ Then, back into bash, I backed up the `sparkyfitness` _database_ (and only that 
 pg_dump -U sparky -d sparkyfitness --format=plain > /root/postgres_backup.sql
 ```
 
-> [!note]
+> [!NOTE]
 >
 > In case you want to back up all the contents of the DB instance, use `pg_dumpall`.
 > This will also export the users and other DBs.

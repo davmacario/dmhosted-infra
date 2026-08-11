@@ -2,13 +2,12 @@
 id: setting-up-truenas
 author: Davide Macario
 date: 2026-05-09
-aliases: []
 tags:
   - homelab
   - nas
 ---
 
-# Setting up TrueNAS on new NAS
+# Setting Up TrueNAS on New NAS
 
 This guide explains the NAS setup on my new [Ugreen NASync DXP4800 Plus](https://nas.ugreen.com/products/ugreen-nasync-dxp4800-plus-nas-storage), running TrueNAS.
 
@@ -22,7 +21,7 @@ This guide explains the NAS setup on my new [Ugreen NASync DXP4800 Plus](https:/
 1. Plugged the USB into the NAS, and booted, pressing Ctrl + F12 to enter boot menu.
    Then, followed all the steps to install TrueNAS on the main `nvme` drive (the 128 GB built-in one).
 
-   > [!DANGER]
+   > [!CAUTION]
    >
    > This completely wipes Ugreen OS.
    > As of 2026, it is possible to get ISOs for UGOS from the [Ugreen website](https://nas.ugreen.com/pages/downloads).
@@ -38,7 +37,7 @@ I unplugged the keyboard, mouse, and screen, and placed the NAS in its final loc
 
 Static IP assigned via DHCP: `192.167.178.254`
 
-> [!note]
+> [!NOTE]
 >
 > `X.X.X.15` is assigned as virtual IP for the k8s api - see [cluster variables](../inventory/group_vars/k3s_cluster.yml)
 

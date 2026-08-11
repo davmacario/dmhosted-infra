@@ -2,7 +2,6 @@
 id: k8s-tailscale-custom-dns
 author: Davide Macario
 date: 2026-02-13
-aliases: []
 tags:
   - k3s
   - homelab
@@ -10,7 +9,7 @@ tags:
   - ingress
 ---
 
-# Exposing Kubernetes workloads to Tailnet with custom Domain Names
+# Exposing Kubernetes Workloads to Tailnet with Custom Domain Names
 
 **Goal**: exposing `Ingress` privately on a tailnet with a custom domain, automatic DNS records, and valid certs.
 
@@ -167,7 +166,7 @@ configure our DNS server to respond to queries for our custom domains with that 
 
 Next, we will deploy an IngressRoute CRD to expose Nginx over the Tailnet.
 
-First, create a certificate (optional) using the `ClusterIssuer` created in [this guide](/docs/traefik-setup.md#issuer-configuration).
+First, create a certificate (optional) using the `ClusterIssuer` created in [this guide](./traefik-setup.md#issuer-configuration).
 We will expose Nginx internally (within tailnet) at the address `nginx.internal.dmhosted.com`.
 
 ```yaml

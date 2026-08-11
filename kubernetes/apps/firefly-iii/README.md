@@ -1,3 +1,13 @@
+---
+id: firefly-iii-k8s
+author: Davide Macario
+date: 2026-06-22
+tags:
+  - homelab
+  - k3s
+  - app
+---
+
 # Firefly-III
 
 Personal finance tracker.

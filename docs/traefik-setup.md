@@ -2,14 +2,13 @@
 id: traefik-setup
 author: Davide Macario
 date: 2026-02-08
-aliases: []
 tags:
   - k3s
   - homelab
   - traefik
 ---
 
-# Traefik setup - K3s
+# Traefik Setup - K3s
 
 The Ansible playbook to install the K3s cluster does not include any Ingress Controller, so we will install Traefik _from scratch_ using Helm.
 
@@ -73,7 +72,7 @@ Note that any traffic that will be sent to the virtual IP assigned to the Traefi
 ## Setting up header-based routing
 
 Next, we will create a Traefik **Middleware** which will allow to apply specific HTTP headers for specific routes.
-See the config in [./kubernetes/traefik/default-headers.yaml](./kubernetes/traefik/default-headers.yaml).
+See the config in [../kubernetes/traefik/default-headers.yaml](../kubernetes/traefik/default-headers.yaml).
 
 ```bash
 kubectl apply -f ./kubernetes/traefik/default-headers.yaml
@@ -91,7 +90,7 @@ kubectl get middleware  # Should display `default-headers`
 
 ## Setting up dashboard access
 
-> [!DANGER]
+> [!CAUTION]
 >
 > Even though authenticated, this is not recommended for publicly-exposed Traefik instances.
 >
@@ -107,19 +106,19 @@ This setup is not the most secure, but it is definitely much better than no auth
 
 Let's create the Traefik dashboard credentials.
 
-Make sure `htpasswd` is installed on your system (if not, run `apt-get instll apache2-utils`, or an equivalent command for your package manager).
+Make sure `htpasswd` is installed on your system (if not, run `apt-get install apache2-utils`, or an equivalent command for your package manager).
 Then, decide on a `<username>` and `<password>`, then run:
 
 ```bash
 htpasswd -nb <username> <password> | openssl base64
 ```
 
-This will output a Base64-encoded secret, which we will plug into [./kubernetes/traefik/dashboard/secret-dashboard.yaml](./kubernetes/traefik/dashboard/secret-dashboard.yaml), in `data:users:`.
+This will output a Base64-encoded secret, which we will plug into [../kubernetes/traefik/dashboard/dashboard-secret.yaml](../kubernetes/traefik/dashboard/dashboard-secret.yaml), in `data:users:`.
 
 Then, apply the manifest:
 
 ```bash
-kubectl apply -f ./kubernetes/traefik/dashboard/secret-dashboard.yaml
+kubectl apply -f ./kubernetes/traefik/dashboard/dashboard-secret.yaml
 ```
 
 To check the secret was created, run
@@ -128,12 +127,12 @@ To check the secret was created, run
 kubectl get secrets -n traefik
 ```
 
-> [!note]
+> [!NOTE]
 >
 > You will probably also see Helm secrets, this is normal.
 
 Keep in mind: we set up the dashboard correctly, however, we haven't defined a route to the dashboard.
-To do so, we will use an `IngressRoute` resource, defined in [./kubernetes/traefik/dashboard/ingress.yaml](./kubernetes/traefik/dashboard/ingress.yaml).
+To do so, we will use an `IngressRoute` resource, defined in [../kubernetes/traefik/dashboard/ingress-internal.yaml](../kubernetes/traefik/dashboard/ingress-internal.yaml).
 
 > [!IMPORTANT]
 >
@@ -141,11 +140,11 @@ To do so, we will use an `IngressRoute` resource, defined in [./kubernetes/traef
 >
 > To enable resolution of `traefik.local.dmhosted.io`, you can temporarily edit `/etc/hosts`.
 
-Note that this `IngressRoute` needs the definition of a middleware (see [./kubernetes/traefik/dashboard/middleware.yaml](./kubernetes/traefik/dashboard/middleware.yaml)) that applies the `traefik-dashboard-auth` secret we just created to the route (effectively triggering auth request when connecting).
+Note that this `IngressRoute` needs the definition of a middleware (see [../kubernetes/traefik/dashboard/middleware.yaml](../kubernetes/traefik/dashboard/middleware.yaml)) that applies the `traefik-dashboard-auth` secret we just created to the route (effectively triggering auth request when connecting).
 
 ```bash
 kubectl apply -f ./kubernetes/traefik/dashboard/middleware.yaml
-kubectl apply -f ./kubernetes/traefik/dashboard/ingress.yaml
+kubectl apply -f ./kubernetes/traefik/dashboard/ingress-internal.yaml
 ```
 
 Check the `IngressRoute` was created:
@@ -168,7 +167,7 @@ What follows are the steps and explainations on how to achieve this.
 
 First of all, Traefik (installed with Helm), exposes the dashboard on port 8080.
 The issue is, by default, the dashboard is not reachable via port 8080 of a Traefik pod (HTTP 404),
-but only via a "_meta_" service called `api@internal` (see [dashboard ingressroute](../kubernetes/traefik/dashboard/ingress.yaml)),
+but only via a "_meta_" service called `api@internal` (see [dashboard ingressroute](../kubernetes/traefik/dashboard/ingress-internal.yaml)),
 which can only be targeted by `IngressRoute`s that use that specific Traefik instance[^1].
 
 [^1]: Not 100% sure about how `api@internal` works, to be honest. The docs probably explain it better.
@@ -324,7 +323,7 @@ Traefik can be used in Kubernetes both via its own CRD (`IngressRoute` provider)
 Typically, the main reason to choose the default `Ingress` is when we may want to switch between different `IngressController`s (e.g., Traefik/Nginx).
 `IngressRoute` is generally easier to set up.
 
-See [Ngnix Ingress](../kubernetes/nginx/ingress.yaml) and [Nginx IngressRoute](../kubernetes/nginx/ingressroute.yaml) for a comparison.
+See [Nginx Ingress](../kubernetes/nginx/ingress.yaml) and [Nginx IngressRoute](../kubernetes/nginx/ingressroute.yaml) for a comparison.
 
 ## Issuing trusted certificates - cert-manager
 
@@ -440,14 +439,14 @@ spec:
 
 Make sure the cert `dnsNames` includes the DNS(s) FQDN for which it is created.
 
-> [!note]
+> [!NOTE]
 >
 > Certificates are not cluster-scoped (unlike `ClusterIssuer`s).
 > Make sure to create them in the correct namespace.
 
 Applying this will create the secret containing the certificate.
 
-> [!note]
+> [!NOTE]
 >
 > Cert creation takes a while.
 > You may have to wait some time before `READY` is True when running `kubectl get certificates.cert-manager.io -n nginx`.
@@ -481,7 +480,7 @@ spec:
 
 Deploying the updated IngressRoute will allow it to use the cert!
 
-> [!tip]
+> [!TIP]
 >
 > Once you have ensured that the deployment works, you can switch to the non-staging Let's Encrypt issuer.
 

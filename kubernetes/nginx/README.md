@@ -1,15 +1,14 @@
 ---
-id: README
+id: nginx
 author: Davide Macario
 date: 2026-01-19
-aliases: []
 tags:
   - tailscale
   - homelab
   - k8s
 ---
 
-# Exposing sample K8s workload to Tailnet
+# Exposing Sample K8s Workload to Tailnet
 
 As seen on [Expose a Kubernetes cluster workload to your tailnet (cluster ingress)](https://tailscale.com/kb/1439/kubernetes-operator-cluster-ingress).
 
@@ -76,7 +75,7 @@ This service is of type `ClusterIP` [^1] and maps port 80 to the exposed port 80
 
 ## Ingress (tailscale)
 
-> [!tip]
+> [!TIP]
 >
 > This is the only part that is specific to the Tailscale operator.
 
@@ -102,7 +101,7 @@ We are now exposing the Service through an `Ingress` of type `Tailscale`.
 We are using TLS (using Tailscale-provided certs), and forwarding traffic onto port 80 of the service.
 Since we are not setting up specific forwarding rules (`spec.rules`), we use a `defaultBackend`, so all incoming traffic will be routed to port 80 of the Service.
 
-> [!note]
+> [!NOTE]
 >
 > Specifying `ingressClassName` needs to be done since we are not using the default Ingress Class (Traefik in my installation).
 

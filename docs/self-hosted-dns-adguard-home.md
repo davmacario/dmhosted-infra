@@ -2,7 +2,6 @@
 id: self-hosted-dns-adguard-home
 author: Davide Macario
 date: 2026-01-14
-aliases: []
 tags:
   - dns
   - homelab
@@ -53,7 +52,7 @@ services:
     restart: unless-stopped
 ```
 
-> [!BUG]
+> [!CAUTION]
 >
 > Port 53 is already in use.
 >
@@ -61,7 +60,7 @@ services:
 >
 > [Solution](https://hub.docker.com/r/adguard/adguardhome#resolved)
 
-> [!ERROR]
+> [!CAUTION]
 >
 > _Currently stuck_
 >
@@ -80,7 +79,7 @@ Configuration is found at `/opt/adguardhome-sync/adguardhome-sync.yaml`.
 
 This is as simple as enabling the DHCP server via the web ui of AdGuardHome.
 
-> [!HINT]
+> [!TIP]
 >
 > The DHCP server assigns IPs to machines that join the network, and returns the default DNS server address.
 > If using AdGuardHome as DHCP, the response will point to AdGuardHome as DNS.
@@ -195,7 +194,7 @@ Then, paste the paths to the certificate and key.
 
 You can now use DoH and DoT.
 
-> [!SUCCESS]
+> [!TIP]
 >
 > By using the Cloudflare plugin, we also enable auto cert renew!
 > Just make sure you point AdGuardHome to the files on disk, and not copy-paste the contents in the UI,
@@ -218,7 +217,7 @@ certbot renew --dry-run
 certbot renew
 ```
 
-> [!ERROR]
+> [!CAUTION]
 >
 > The 1st try did not work because of failure in checking the TXT records.
 > Once verified that the API token was still available and valid, I increased the verification duration to 30s by

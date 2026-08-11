@@ -1,4 +1,14 @@
-# Setting up DNS on MacOS (Tailscale)
+---
+id: dns-setup-macos
+author: Davide Macario
+date: 2026-06-22
+tags:
+  - homelab
+  - dns
+  - tailscale
+---
+
+# Setting Up DNS on MacOS (Tailscale)
 
 ## Requirements
 
@@ -29,7 +39,7 @@ nameserver 100.100.100.100
 
 To display the DNS resolver setup, run:
 
-```zsh
+```bash
 scutil --dns
 ```
 
