@@ -1,4 +1,4 @@
-# Custom values for kube-prometheus-stack (v 82.13.1)
+# Custom values for kube-prometheus-stack (v 88.3.0)
 nameOverride: ""
 
 prometheusOperator:
