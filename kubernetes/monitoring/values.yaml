@@ -48,11 +48,11 @@ prometheus:
     scrapeInterval: 30s # default
     # How long to retain metrics (and max size)
     retention: 15d
-    retentionSize: 40GiB
+    retentionSize: 60GiB
     resources:
       limits:
-        cpu: 500m
-        memory: 1024Mi
+        cpu: 1000m
+        memory: 1536Mi
       requests:
         cpu: 300m
         memory: 512Mi
