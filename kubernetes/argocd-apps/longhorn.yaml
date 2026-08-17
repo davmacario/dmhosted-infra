@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn
+  namespace: argocd
+  labels:
+    name: longhorn
+spec:
+  project: default
+  sources:
+    - repoURL: https://charts.longhorn.io
+      chart: longhorn
+      targetRevision: longhorn-1.11.1
+      helm:
+        releaseName: longhorn
+        valueFiles:
+          - $values/kubernetes/longhorn/values.yaml
+    - repoURL: https://github.com/davmacario/dmhosted-infra
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/davmacario/dmhosted-infra
+      targetRevision: main
+      path: kubernetes/longhorn
+      directory:
+        recurse: false
+        exclude: values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longhorn
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true

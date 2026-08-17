@@ -360,6 +360,16 @@ If the `REFCOUNT` ("Reference Count" in the UI) is 0, you can delete the engine,
 
 **This completes the upgrade**.
 
+## Migrating Longhorn to ArgoCD
+
+Followed same format as kube-prometheus stack.
+
+One thing needed was to create sealed secret for Longhorn UI.
+
+## Upgrading Longhorn (v1.11.1 -> v1.12.)
+
+> TODO
+
 ---
 
 ## Links
