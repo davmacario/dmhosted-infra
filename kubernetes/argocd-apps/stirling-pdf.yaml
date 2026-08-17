@@ -27,8 +27,5 @@ spec:
     server: https://kubernetes.default.svc
     namespace: stirling-pdf
   syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
     syncOptions:
       - CreateNamespace=false

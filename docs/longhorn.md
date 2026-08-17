@@ -318,6 +318,12 @@ The application volume can be upgraded manually (non strictly-local, as RWX).
    You can also see that the volumes show up as 'detached' in the Longhorn UI.
 
 1. From the Longhorn UI, manually upgrade the Longhorn Engine for the volumes, as explained in [previous section](#migrating-volumes-to-upgraded-longhorn-engine).
+
+   > [!NOTE]
+   >
+   > If `concurrentAutomaticEngineUpgradePerNodeLimit: 2`, the engine image
+   > will upgrade automatically once the volume is detached.
+
 1. Unset `hibernation` mode on the DB Cluster:
 
    ```bash
@@ -385,7 +391,20 @@ defaultSettings:
   concurrentAutomaticEngineUpgradePerNodeLimit: 2
 ```
 
-Longhorn volumes will perform an online Engine upgrade.
+Longhorn volumes will perform an online Engine upgrade, however this will only work for volumes that are not strictly local.
+
+To migrate the rest, we will have to peform the same steps as in
+[Migrating strictly-local Longhorn volumes](#migrating-strictly-local-longhorn-volumes).
+Luckily, having set `concurrentAutomaticEngineUpgradePerNodeLimit: 2`, we don't need to manually upgrade the engine version from the UI, as this will happen automatically once the volumes are detached.
+
+Service checklist
+
+- [x] forgejo
+- [x] immich
+- [x] vaultwarden
+- [x] firefly-iii
+- [x] speedtest-tracker
+- [x] sparkyfitness
 
 ---
 
