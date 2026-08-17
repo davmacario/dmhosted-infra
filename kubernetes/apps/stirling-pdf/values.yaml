@@ -21,12 +21,10 @@ persistence:
   volumeName: stirling-pdf
 
 resources:
-  # limits:
-  #   cpu: 400m
-  #   memory: 1024Mi
+  limits:
+    memory: 4096Mi
   requests:
-    cpu: 200m
-    memory: 256Mi
+    memory: 512Mi
 
 service:
   servicename: stirling-pdf
