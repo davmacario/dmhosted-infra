@@ -12,7 +12,7 @@ defaultSettings:
   nodeDrainPolicy: block-if-contains-last-replica
   # Auto upgrade (if possible) volumes' engine version
   concurrentAutomaticEngineUpgradePerNodeLimit: 2
-persistence:
+persistence: # Applies to default SC only
   # If PVC is deleted, volumes are not deleted - need to do it manually
   reclaimPolicy: Retain
 csi: # The following are all defaults
@@ -20,7 +20,7 @@ csi: # The following are all defaults
   provisionerReplicaCount: 3
   resizerReplicaCount: 3
   snapshotterReplicaCount: 3
-# Enable prometheus endpoint
+# Enable prometheus endpoint - automatically scraped by prometheus instance
 metrics:
   serviceMonitor:
     enabled: true
@@ -35,14 +35,14 @@ preUpgradeChecker:
 image:
   longhorn:
     engine:
-      tag: v1.11.1
+      tag: v1.12.1
     manager:
-      tag: v1.11.1
+      tag: v1.12.1
     instanceManager:
-      tag: v1.11.1
+      tag: v1.12.1
     ui:
-      tag: v1.11.1
+      tag: v1.12.1
     shareManager:
-      tag: v1.11.1
+      tag: v1.12.1
     backingImageManager:
-      tag: v1.11.1
+      tag: v1.12.1

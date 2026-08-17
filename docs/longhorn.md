@@ -368,7 +368,24 @@ One thing needed was to create sealed secret for Longhorn UI.
 
 ## Upgrading Longhorn (v1.11.1 -> v1.12.)
 
-> TODO
+See [guide](https://longhorn.io/docs/1.12.0/deploy/upgrade/#upgrading-longhorn).
+Specifically, [v1.11 -> v1.12](https://longhorn.io/docs/1.12.0/deploy/upgrade/longhorn-manager/).
+
+### Upgrading Longhorn Manager (automated)
+
+Just update the values (I'm pinning longhorn image versions) and the ArgoCD Application to point to v1.12.1.
+
+### Upgrading Longhorn Engine
+
+Given [values.yaml](../kubernetes/longhorn/values.yaml) contains
+
+```yaml
+defaultSettings:
+  # ...
+  concurrentAutomaticEngineUpgradePerNodeLimit: 2
+```
+
+Longhorn volumes will perform an online Engine upgrade.
 
 ---
 
