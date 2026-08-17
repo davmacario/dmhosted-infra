@@ -406,6 +406,39 @@ Service checklist
 - [x] speedtest-tracker
 - [x] sparkyfitness
 
+#### FIX: Missing Longhorn Metrics Collection
+
+**Issue**: the new chart version (v1.12.1) introduces a deny-all policy on traffic coming from
+outside the namespace to Longhorn pods, via a `NetworkPolicy` resource.
+
+The solution (besides being able to avoid this via specific entries in values.yaml) is to add
+a `NetworkPolicy` to allow traffic from the `monitoring` namespace on port 9500 (used to
+expose the Prometheus metrics).
+
+See [allow-monitoring-networkpolicy.yaml](../kubernetes/longhorn/allow-monitoring-networkpolicy.yaml):
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: longhorn-manager-allow-monitoring
+  namespace: longhorn-system
+spec:
+  podSelector:
+    matchLabels:
+      app: longhorn-manager
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - port: 9500
+          protocol: TCP
+```
+
 ---
 
 ## Links
