@@ -1,6 +1,26 @@
 ---
 longhornUI:
-  replicas: 2
+  replicas: 1
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+longhornManager:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi
+longhornDriver:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
 defaultSettings:
   # Schedule pods on nodes that have the PVs they need
   defaultDataLocality: "best-effort"
