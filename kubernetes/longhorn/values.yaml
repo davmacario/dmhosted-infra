@@ -1,6 +1,6 @@
 ---
 longhornUI:
-  replicas: 2
+  replicas: 1
 defaultSettings:
   # Schedule pods on nodes that have the PVs they need
   defaultDataLocality: "best-effort"
