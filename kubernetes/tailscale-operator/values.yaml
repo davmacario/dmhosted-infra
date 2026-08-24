@@ -18,7 +18,6 @@ operatorConfig:
   image:
     pullPolicy: Always
     repository: tailscale/k8s-operator
-    tag: ""  # Trust with latest version
   logging: warning
   nodeSelector:
     kubernetes.io/os: linux
@@ -36,4 +35,3 @@ proxyConfig:
   firewallMode: auto
   image:
     repository: tailscale/tailscale
-    tag: ""  # Trust with latest version
