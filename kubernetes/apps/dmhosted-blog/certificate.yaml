@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: dmhosted-blog-public-cert
+  namespace: dmhosted-blog
+spec:
+  secretName: dmhosted-blog-public-cert
+  issuerRef:
+    name: cloudflare-clusterissuer
+    kind: ClusterIssuer
+  dnsNames:
+    - blog.dmhosted.com
