@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dmhosted-blog
+  namespace: dmhosted-blog
+  labels:
+    app: dmhosted-blog
+spec:
+  revisionHistoryLimit: 3
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dmhosted-blog
+  template:
+    metadata:
+      labels:
+        app: dmhosted-blog
+    spec:
+      containers:
+        - name: dmhosted-blog
+          image: ghcr.io/davmacario/dmhosted-blog:20260824-5d2750d
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              cpu: 20m
+              memory: 16Mi
+            requests:
+              cpu: 5m
+              memory: 8Mi
