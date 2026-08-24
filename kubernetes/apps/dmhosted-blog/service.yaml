@@ -9,6 +9,6 @@ spec:
   type: ClusterIP
   ports:
     - port: 8080
-      targetPort: 8080
+      targetPort: http
   selector:
     app: dmhosted-blog

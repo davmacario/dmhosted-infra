@@ -14,6 +14,8 @@ spec:
   routes:
     - match: Host(`blog.dmhosted.com`)
       kind: Rule
+      middlewares:
+        - name: dmhosted-blog-headers
       services:
         - name: dmhosted-blog
           port: 8080
