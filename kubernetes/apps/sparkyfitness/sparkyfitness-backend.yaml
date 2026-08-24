@@ -51,7 +51,7 @@ spec:
           - sparkyfitness.svc.cluster.local # Allows to refer to the DB as 'sparkyfitness-db'
       containers:
         - name: sparkyfitness-backend
-          image: codewithcj/sparkyfitness_server:v1.6.2
+          image: codewithcj/sparkyfitness_server:v1.6.3
           env:
             - name: SPARKY_FITNESS_LOG_LEVEL
               value: WARN
