@@ -72,6 +72,21 @@ spec:
               value: https://sparkyfitness.local.dmhosted.com # Alt origins
             - name: TZ
               value: Europe/Amsterdam
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 10
           resources:
             requests:
               cpu: 100m
