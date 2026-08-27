@@ -1,0 +1,18 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: sparkyfitness-internal
+  namespace: sparkyfitness
+spec:
+  ingressClassName: traefik-tailscale
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`sparkyfitness.internal.dmhosted.com`)
+      kind: Rule
+      services:
+        - name: sparkyfitness-frontend
+          port: 80
+  tls:
+    secretName: sparkyfitness-internal-cert

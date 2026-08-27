@@ -1,0 +1,13 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: sparkyfitness-internal-cert
+  namespace: sparkyfitness
+spec:
+  secretName: sparkyfitness-internal-cert
+  issuerRef:
+    name: cloudflare-clusterissuer
+    kind: ClusterIssuer
+  dnsNames:
+    - sparkyfitness.internal.dmhosted.com
