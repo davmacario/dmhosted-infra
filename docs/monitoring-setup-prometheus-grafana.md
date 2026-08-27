@@ -472,6 +472,132 @@ Explaination:
 
 ---
 
+## Incidents
+
+### Incident: Longhorn instance-manager CPU spikes (2026-08-27)
+
+> Report is AI generated; investigation was carried out with Claude
+
+#### Symptom
+
+`longhorn-system` instance-manager pods showed 540–690m CPU. Baseline is
+`overvecht 82m`, `gouda 177m`, `heiloo 101m`.
+
+Note: `kubectl top` served a _stale cached peak_, overstating the steady state.
+Per-process accounting inside the pod and Prometheus `container_cpu_usage_seconds_total`
+gave the real picture. Bursts were genuine but lasted hours, not seconds.
+
+#### Root cause
+
+Longhorn was the victim, not the cause.
+
+1. **Cardinality bomb.** TSDB head held 407,570 series; the top 8 metrics were all
+   apiserver/etcd histogram buckets (~223k series, ~55% of the TSDB). The apiserver
+   job scraped 201,085 samples per scrape.
+
+   | series | metric                                          |
+   | ------ | ----------------------------------------------- |
+   | 63,614 | `apiserver_request_duration_seconds_bucket`     |
+   | 43,996 | `etcd_request_duration_seconds_bucket`          |
+   | 37,890 | `apiserver_request_sli_duration_seconds_bucket` |
+   | 25,280 | `apiserver_request_body_size_bytes_bucket`      |
+
+2. **`kube-apiserver-burnrate.rules`** ran 14 rules over windows
+   `[5m 30m 1h 2h 6h 1d 3d]` against `apiserver_request_sli_duration_seconds_bucket`
+   (22,860 series match its `verb=~"LIST|GET"` selector). A single `[1d]` rate scans
+   ~66M samples; the group scans hundreds of millions per evaluation.
+
+3. The working set exceeded page cache, so reads came off historical TSDB blocks on disk.
+
+4. Every read traversed the Longhorn userspace data path
+   (Prometheus → `/dev/longhorn/…` → `tgtd` → Go engine → replicas). The engine process
+   for this one volume had accumulated 20,908 CPU-seconds.
+
+5. **Self-sustaining.** The group took 43.7s against a 30s evaluation interval, so it
+   missed 40.7 iterations/hour and immediately re-ran.
+
+| metric            | baseline | peak     |
+| ----------------- | -------- | -------- |
+| rule eval         | 0.33 s/s | 1.13 s/s |
+| `sdd` utilisation | 15%      | ~100%    |
+| disk reads        | 1.7 MB/s | 21 MB/s  |
+| major page faults | 12/s     | 139/s    |
+| volume read IOPS  | 0        | 491      |
+
+`sdd` is `rotational=1` (QEMU VIRTUAL-DISK), topping out near 21 MB/s random reads.
+All three instance managers rose together because the volume has 3 replicas and reads
+fan out.
+
+#### Ruled out
+
+- **Memory pressure** — `node_memory_Cached_bytes` and `MemAvailable` stayed flat.
+- **`--debug` flag** — Longhorn hardcodes it in instance-manager args; log rate was zero.
+- **Snapshots** — only 11, no recurring jobs configured.
+- **Replica rebuilds** — all 28 volumes `healthy`, `rebuildRetryCount: 0`.
+- **TSDB compaction** — 0.000 s/s throughout the window; it only fired _after_.
+
+#### Fixes applied
+
+1. Disabled `kubeApiserverBurnrate`, `kubeApiserverSlos`, `kubeApiserverAvailability`,
+   `kubeApiserverHistogram` in `defaultRules.rules`. Verified
+   `apiserver_request_sli_duration_seconds_bucket` is referenced only by these three
+   groups, so nothing else breaks.
+
+   > [!NOTE]
+   > The bundled _Kubernetes / API server_ Grafana dashboard loses its latency and
+   > availability panels — they depend on the dropped histograms and the disabled recording
+   > rules.
+
+2. Added name-based `drop` relabelings on the apiserver ServiceMonitor for the eight
+   histograms above (~50% TSDB reduction). Verified seven of them are referenced by no
+   rules at all. The chart's default bucket-thinning relabeling was _preserved_ rather
+   than replaced, since setting `metricRelabelings` overrides the chart default.
+3. `retentionSize: 60GiB` → `40GiB`. It exceeded the 50Gi volume, so size-based
+   retention could never trigger before the disk filled (was at 26.86 GiB — latent,
+   not yet firing).
+
+4. Prometheus PVC moved from `longhorn-data-local` (3 replicas, `best-effort`) to
+   `longhorn-singlecopy` (1 replica, `strict-local`). The TSDB is the highest-IO volume
+   in the cluster and 3-way synchronous replication of expendable metrics across
+   rotational virtual disks is poor value. Dropping 3→1 also removes the cross-node
+   replica reads that made `gouda` and `heiloo` rise alongside `overvecht`.
+
+   `local-path` was considered and rejected: it would additionally remove the local
+   userspace path (`tgtd` → engine → replica), but that is the smaller half of the
+   saving, and it cannot expand volumes (`allowVolumeExpansion: false`) or report the
+   `longhorn_volume_*` metrics that made this incident diagnosable. Longhorn's usual
+   counter-argument does not apply either — `backup-target` is empty, so it provides
+   this volume no off-cluster protection.
+
+#### Migration (destructive)
+
+A StatefulSet's `volumeClaimTemplate` is immutable, so changing the storage class
+requires recreating the PVC. ~27 GiB of history was discarded deliberately.
+
+Order matters: the values change must be synced by ArgoCD _before_ the PVC is deleted,
+otherwise the operator re-provisions it against the old storage class.
+
+```sh
+# 1. only after ArgoCD has synced the new storageClassName
+kubectl delete sts -n monitoring prometheus-prometheus-stack-kube-prom-prometheus
+kubectl delete pvc -n monitoring \
+  prometheus-prometheus-stack-kube-prom-prometheus-db-prometheus-prometheus-stack-kube-prom-prometheus-0
+
+# 2. the operator recreates the STS, provisioning a fresh PVC from longhorn-singlecopy
+```
+
+The old PV lingers as `Released` (`longhorn-data-local` is `reclaimPolicy: Retain`) and
+its Longhorn volume keeps consuming disk until deleted manually.
+
+> [!NOTE]
+>
+> `nodeDrainPolicy: block-if-contains-last-replica` means a single-replica volume blocks
+> drains of its node, which matters given `system-upgrade` performs automatic k3s
+> upgrades. Not introduced by this change: 17 single-replica volumes already existed
+> across all three nodes.
+
+---
+
 ## Links
 
 - [Techno Tim's video](https://youtu.be/fzny5uUaAeY?si=TD5OXGl0MXKc2iyC)
