@@ -48,7 +48,7 @@ prometheus:
     scrapeInterval: 30s # default
     # How long to retain metrics (and max size)
     retention: 15d
-    retentionSize: 60GiB # < PVC size
+    retentionSize: 55GiB # < PVC size
     resources:
       limits:
         cpu: 1000m
