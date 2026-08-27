@@ -9,6 +9,6 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    - port: 3010 # From docs
+    - port: http
   selector:
     app: sparkyfitness-backend

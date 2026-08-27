@@ -72,6 +72,9 @@ spec:
               value: https://sparkyfitness.local.dmhosted.com # Alt origins
             - name: TZ
               value: Europe/Amsterdam
+          ports:
+            - containerPort: 3010
+              name: http
           livenessProbe:
             httpGet:
               path: /api/health
