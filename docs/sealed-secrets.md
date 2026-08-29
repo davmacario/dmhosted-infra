@@ -98,8 +98,9 @@ Two things need manual intervention.
    are not unsealed during that window; already-created Secrets are owned by their SealedSecret
    resources and are unaffected.
 
-2. Four RBAC objects are renamed and the originals are left behind as orphans (ArgoCD does not
-   track them, so it will not prune them). Delete them once the sync is healthy:
+2. Four RBAC objects are renamed (to `sealed-secrets-controller-*`) and the originals are left behind
+   as orphans (ArgoCD does not track them, so it will not prune them). Delete them once the sync is
+   healthy:
 
    ```bash
    kubectl -n kube-system delete role sealed-secrets-key-admin sealed-secrets-service-proxier
