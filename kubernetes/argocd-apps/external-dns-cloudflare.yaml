@@ -4,7 +4,7 @@ metadata:
   name: external-dns-cloudflare
   namespace: argocd
   labels:
-    name: immich
+    name: external-dns
 spec:
   project: default
   sources:
