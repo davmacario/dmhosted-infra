@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: cloudflare-tunnel
   namespace: argocd
+  labels:
+    name: cloudflare-tunnel
 spec:
   project: default
   source:
