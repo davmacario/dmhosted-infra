@@ -12,6 +12,8 @@ tags:
 
 > **Disclaimer**: this writeup was written by AI
 
+> TODO: fix it following K3s guide: <https://docs.k3s.io/advanced#coredns-custom-configuration-imports>
+
 ## Symptom
 
 Workloads in the cluster (e.g. Uptime Kuma) intermittently fail to resolve Tailscale/tailnet
@@ -117,70 +119,64 @@ all workloads, not just the one we noticed the issue on.
 
 ### Steps
 
-1. View the current CoreDNS ConfigMap:
+For K3s, the [advanced guide](https://docs.k3s.io/advanced#coredns-custom-configuration-imports)
+explains how to do it properly.
 
-   ```bash
-   kubectl -n kube-system get configmap coredns -o yaml
-   ```
+What we need to do is simply create a ConfigMap named `coredns-custom` to introduce overrides to
+the default config obtained above.
 
-2. Edit it:
+The end result will have to look like:
 
-   ```bash
-   kubectl -n kube-system edit configmap coredns
-   ```
+```corefile
+internal.dmhosted.com ts.net:53 {
+    errors
+    cache 30
+    forward . <TAILSCALE_DNS_SERVER_IP>
+}
+.:53 {
+    errors
+    health
+    ready
+    kubernetes cluster.local in-addr.arpa ip6.arpa {
+       pods insecure
+       fallthrough in-addr.arpa ip6.arpa
+       ttl 30
+    }
+    prometheus :9153
+    forward . /etc/resolv.conf {
+       max_concurrent 1000
+    }
+    cache 30
+    loop
+    reload
+    loadbalance
+}
+```
 
-3. Add a dedicated server block for our domain(s) (including TS magic DNS), forwarding to our Tailscale DNS server IP.
-   Add this **alongside** (not inside) the existing `.:53` block:
+Thus, we need to add a new _server_ section to match the internal domains (`internal.dmhosted.com` and `ts.net`).
+This can be achieved with the following [ConfigMap](../kubernetes/system-configuration/coredns-custom.yaml):
 
-   ```text
-   internal.dmhosted.com ts.net:53 {
-       errors
-       cache 30
-       forward . <TAILSCALE_DNS_SERVER_IP>
-   }
-   .:53 {
-       errors
-       health
-       ready
-       kubernetes cluster.local in-addr.arpa ip6.arpa {
-          pods insecure
-          fallthrough in-addr.arpa ip6.arpa
-          ttl 30
-       }
-       prometheus :9153
-       forward . /etc/resolv.conf {
-          max_concurrent 1000
-       }
-       cache 30
-       loop
-       reload
-       loadbalance
-   }
-   ```
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  tailscale.server: |
+    internal.dmhosted.com ts.net:53 {
+        errors
+        cache 30
+        forward . 100.127.99.35
+    }
+```
 
-   Where:
-   - `internal.dmhosted.com` is the "internal-facing" subdomain I use for all services exposed
-     within Tailscale only (the only DNS that can answer this is my own DNS - Adguard Home).
-   - `ts.net` is the subdomain of any Tailnet, so any Magic DNS domain matches.
-
-4. Save. CoreDNS has the `reload` plugin enabled, so it will pick up the ConfigMap change
-   automatically (within ~45 seconds) — **no pod restart required**.
-
-5. Verify the reload happened:
-
-   ```bash
-   kubectl -n kube-system logs -l k8s-app=kube-dns --tail=20
-   ```
-
-   Look for a `"Reloading"` log entry.
-
-6. Verify resolution from a workload pod:
-
-   ```bash
-   kubectl exec -it <pod-name> -- nslookup <tailnet-hostname>
-   ```
-
-   or simply see Uptime Kuma/Homepage dashboard being now able to resolve internal domains.
+> [!TIP]
+>
+> An alternative could be to just add a `forward` rule in the existing _server_ section,
+> but this would make the query go through every thing that is already defined in the section.
+> Since we don't need most of the things defined there to process our internal DNS query,
+> it is best to just add another server section.
 
 ## Why This Is the Durable Fix
 
