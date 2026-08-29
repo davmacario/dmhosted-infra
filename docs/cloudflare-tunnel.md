@@ -227,7 +227,7 @@ From now on, any service exposed via the main Traefik instance will be reachable
 We will provide an alternative installation to `External DNS` from the one explained in [k8s-tailscale-custom-dns.md](./k8s-tailscale-custom-dns.md#external-dns-for-adguardhome).
 
 We will use the `cloudflare` provider for external-dns.
-The configuration can be found in the [values file](../kubernetes/external-dns/values-cloudflare.yaml).
+The configuration can be found in the [values file](../kubernetes/external-dns/cloudflare/values.yaml).
 
 Notice that it needs a secret to exist, containing an API token for Cloudflare, as it will be modifying DNS records for us.
 
