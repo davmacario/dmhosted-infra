@@ -47,6 +47,72 @@ tar -xvzf kubeseal-0.38.1-linux-amd64.tar.gz kubeseal
 sudo install -m 755 kubeseal /usr/local/bin/kubeseal
 ```
 
+## Managing with ArgoCD
+
+The controller was originally installed with `kubectl apply` (see above).
+It is now managed by [ArgoCD](./argocd.md) via
+[`kubernetes/argocd-apps/sealed-secrets.yaml`](../kubernetes/argocd-apps/sealed-secrets.yaml), and
+should not be applied by hand any more.
+
+### Switch to Helm
+
+ArgoCD `Application`s only support local (in Git) YAML manifests, Helm charts, or Kustomize, meaning
+there is no way to point to the remote manifest mentioned in [previous section](#cluster-side).
+For this reason, it was required to move to an alternative method, and Helm was chosen.
+The helm chart is found at <https://bitnami.github.io/sealed-secrets>.
+
+Chart `2.19.0` maps to app version `0.38.1`, i.e. exactly what the release manifest had installed,
+so the migration changes the delivery mechanism without upgrading the controller.
+
+Values can be found in [`kubernetes/sealed-secrets/values.yaml`](../kubernetes/sealed-secrets/values.yaml).
+The only setting is `fullnameOverride: sealed-secrets-controller`, which keeps the resource names
+the release manifest used - the chart otherwise names everything `sealed-secrets`, which would
+spin up a second controller instead of adopting the running one and would break
+`kubeseal --controller-name=sealed-secrets-controller`.
+
+To bump the version, find the chart revision and update `targetRevision` in the Application:
+
+```bash
+helm repo add sealed-secrets https://bitnami.github.io/sealed-secrets
+helm search repo sealed-secrets/sealed-secrets --versions | head
+```
+
+### Adopting the existing installation
+
+Most objects are adopted in place, because the names already match: the `sealedsecrets.bitnami.com`
+CRD, the `secrets-unsealer` ClusterRole, the `sealed-secrets-controller` ClusterRoleBinding /
+ServiceAccount / Services.
+
+Two things need manual intervention.
+
+1. The Deployment must be deleted before the first sync. The release manifest selects pods on
+   `name: sealed-secrets-controller`, the chart on `app.kubernetes.io/{name,instance}`, and
+   `spec.selector` is immutable — so the sync fails with `field is immutable` until the old object is
+   gone:
+
+   ```bash
+   kubectl -n kube-system delete deployment sealed-secrets-controller
+   ```
+
+   ArgoCD recreates it on sync. The controller is briefly unavailable, which only means SealedSecrets
+   are not unsealed during that window; already-created Secrets are owned by their SealedSecret
+   resources and are unaffected.
+
+2. Four RBAC objects are renamed and the originals are left behind as orphans (ArgoCD does not
+   track them, so it will not prune them). Delete them once the sync is healthy:
+
+   ```bash
+   kubectl -n kube-system delete role sealed-secrets-key-admin sealed-secrets-service-proxier
+   kubectl -n kube-system delete rolebinding sealed-secrets-controller sealed-secrets-service-proxier
+   ```
+
+> [!NOTE]
+>
+> **No re-sealing is required.** The chart runs the controller with
+> `--key-prefix sealed-secrets-key`, which matches the existing `sealed-secrets-key*` secrets, so
+> it picks up the same private keys. Those secrets are generated at runtime and are not part of
+> the chart, so ArgoCD never manages (or prunes) them.
+
 ## Usage
 
 Given a secret stored in the file `test-secret.yaml` (not committed to Git):

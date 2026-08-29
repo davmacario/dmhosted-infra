@@ -11,16 +11,18 @@ tags:
 - [x] Set up basic auth middleware in front of dashboards
 - [x] Validate Longhorn installation
 - [x] Install [Homepage](https://gethomepage.dev/installation/k8s/)
-  - [~] Find nicer way to handle secrets appearing in configmap...
-    - No alternative found for now... Settled with not tracking configmap definition in Git
+  - [x] Find nicer way to handle secrets appearing in configmap...
+    - ~~No alternative found for now... Settled with not tracking configmap definition in Git~~
+    - Moved to secret + sealedsecrets
 - [x] Install IT-Tools (migrate from puppy)
 - [x] Install Stirling PDF
 - [x] Install [Uptime Kuma](https://github.com/louislam/uptime-kuma)
-  - Configured 2 dashboards (hosts & internal services)
+  - Configured 2 dashboards (hosts & ~~internal~~ services)
 - [x] Kube-Prometheus stack
   - [x] Enable alerts
   - [x] Configure Grafana admin user password using secret
   - [ ] Configure extra dashboards (configmaps)
+  - [ ] Migrate all Grafana dashboards to be defined as code
 - [x] Migrate firefly-iii from puppydm01
   - [x] Deploy "empty" firefly-iii, using PostgreSQL
   - [x] Migrate DB data
@@ -32,6 +34,7 @@ tags:
 - [x] Vaultwarden
   - [x] Decide on advanced setup (2FA)
   - [x] Set up email notification
+  - [ ] Yubikey setup
 - [x] Upgrade Longhorn
 - [x] Configure NAS (TrueNAS)
   - Look into Terraform for this ([provider](https://registry.terraform.io/providers/PjSalty/truenas/latest/docs/guides/kubernetes-storage))
@@ -51,7 +54,10 @@ tags:
 - [x] Switch to [kubeseal](https://kubeseal.com/) for secrets management
 - [x] Set up hosted Git (Forgejo looks like the best)
 - [x] ArgoCD
+  - [ ] Figure out mechanism to preview diffs from MRs - is this even a use case?
 - [ ] Configure CICD environment where to run homelab-related deployments
 - [ ] Syncthing
   - I expect the setup to be a tiny bit more complicated, as it will need a LoadBalancer service type (it is not HTTP...)
   - Actually, anything that would allow syncing obsidian works (should be in a de-centralized fashion, that's why syncthing)
+- [x] Blog
+- [ ] Setup for keeping apps/charts up to date

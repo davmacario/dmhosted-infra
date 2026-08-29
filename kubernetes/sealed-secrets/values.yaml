@@ -1,0 +1,6 @@
+---
+# Keep the resource names produced by the upstream release manifest, which is how the
+# controller was originally installed. Without this the chart would name everything
+# `sealed-secrets`, creating a second controller instead of adopting the running one, and
+# `kubeseal --controller-name=sealed-secrets-controller` would stop resolving.
+fullnameOverride: sealed-secrets-controller
