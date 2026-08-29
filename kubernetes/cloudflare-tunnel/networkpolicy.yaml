@@ -1,0 +1,162 @@
+---
+# Default deny all for the `cloudflare` namespace
+# The following NetworkPolicies enable the required routes
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: cloudflare
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# Cluster DNS
+# CoreDNS forwards internal.dmhosted.com and ts.net to the tailnet DNS server
+# itself (see kubernetes/system-configuration/coredns-custom.yaml), so pods here
+# only ever need to reach kube-dns.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns
+  namespace: cloudflare
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to: # Targets coredns pod(s)
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+---
+# cloudflared: the only public ingress path into the cluster.
+# NOTE: from deployment, exposed port (metrics, healthcheck) is 2000
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-cloudflared
+  namespace: cloudflare
+spec:
+  podSelector:
+    matchLabels:
+      pod: cloudflared
+      tunnel-name: k3s-traefik
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Prometheus scrapes /metrics (Service `cloudflare-metrics`, see monitoring.yaml)
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - port: 2000
+          protocol: TCP
+    # Kubelet liveness probe on /ready. `failureThreshold: 1` means blocking this
+    # would crash-loop the tunnel almost immediately, so allow the node subnet
+    # explicitly rather than relying on node-local traffic skipping the filter.
+    - from:
+        - ipBlock:
+            cidr: 192.168.0.0/16
+      ports:
+        - port: 2000
+          protocol: TCP
+  egress:
+    # Outbound tunnel to the Cloudflare edge: QUIC on UDP/7844, HTTP/2 fallback
+    # on TCP/7844, and TCP/443 for the token/config bootstrap
+    # Exclude any private subnet (k8s, local, tailscale) to prevent reaching
+    # internal stuff from outside
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8 # includes pods + services
+              - 192.168.0.0/16 # LAN
+              - 172.16.0.0/12 # Local range (not used but doesn't hurt)
+              - 100.64.0.0/10 # tailscale
+              - 169.254.0.0/16 # link-local
+      ports:
+        - port: 7844
+          protocol: UDP
+        - port: 7844
+          protocol: TCP
+        - port: 443
+          protocol: TCP
+    # Match setup: cloudflared pods should only route traffic to primary traefik
+    # See kubernetes/cloudflare-tunnel/configmap.yaml.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik
+          podSelector:
+            matchLabels: # Defined in kubernetes/traefik/values.yaml
+              app: traefik
+              instance: primary
+      ports:
+        - port: 443
+          protocol: TCP
+---
+# external-dns (for Cloudflare provider): manages the public DNS records for the
+# four IngressRoutes annotated
+#         external-dns.alpha.kubernetes.io/provider=cloudflare
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-external-dns
+  namespace: cloudflare
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: external-dns
+      app.kubernetes.io/instance: external-dns-cloudflare
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Kubelet liveness/readiness probes on /healthz. Nothing scrapes this pod.
+    - from:
+        - ipBlock:
+            cidr: 192.168.0.0/16
+      ports:
+        - port: 7979
+          protocol: TCP
+  egress:
+    # api.cloudflare.com
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 100.64.0.0/10
+              - 169.254.0.0/16
+      ports:
+        - port: 443
+          protocol: TCP
+    # Kube API server. kube-router evaluates egress after DNAT, so the
+    # `kubernetes.default` ClusterIP resolves to a node on :6443 - both forms
+    # are listed so the rule holds either way.
+    - to:
+        - ipBlock:
+            cidr: 10.43.0.1/32
+      ports:
+        - port: 443
+          protocol: TCP
+    - to:
+        - ipBlock:
+            cidr: 192.168.178.0/24
+      ports:
+        - port: 6443
+          protocol: TCP
