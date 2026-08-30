@@ -35,7 +35,7 @@ I unplugged the keyboard, mouse, and screen, and placed the NAS in its final loc
 
 ## Networking
 
-Static IP assigned via DHCP: `192.167.178.254`
+Static IP assigned via DHCP: `192.168.178.254`
 
 > [!NOTE]
 >
