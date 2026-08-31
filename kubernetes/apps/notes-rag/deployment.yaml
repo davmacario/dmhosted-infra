@@ -30,9 +30,9 @@ spec:
             - name: REBUILD_CRON
               value: "0 */6 * * *"
             - name: NOTES_DIRECTORY
-              value: /app/notes-rag/notes-cache/repo
+              value: /mnt/notes-rag/notes-cache
             - name: CHROMA_PATH
-              value: /app/notes-rag/chroma-cache/db
+              value: /mnt/notes-rag/chroma-cache
             - name: NOTES_REPO_URL
               valueFrom:
                 secretKeyRef:
@@ -56,11 +56,11 @@ spec:
             limits:
               memory: 1024Mi # Peak at rebuild
           volumeMounts:
-            - mountPath: /app/notes-rag/notes-cache
-              subPath: repo
+            - mountPath: /mnt/notes-rag/notes-cache
+              subPath: notes-cache
               name: persistent-data
-            - mountPath: /app/notes-rag/chroma-cache
-              subPath: db
+            - mountPath: /mnt/notes-rag/chroma-cache
+              subPath: chroma-cache
               name: persistent-data
       volumes:
         - name: persistent-data
