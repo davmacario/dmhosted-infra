@@ -1,0 +1,65 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notes-rag
+  namespace: notes-rag
+  labels:
+    app: notes-rag
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notes-rag
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 3
+  template:
+    metadata:
+      labels:
+        app: notes-rag
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: notes-rag
+          image: ghcr.io/davmacario/notes-rag:v1.1.1
+          command:
+            - --rebuild-on-start
+          env:
+            - name: REBUILD_CRON
+              value: "0 */6 * * *"
+            - name: NOTES_DIRECTORY
+              value: /app/notes-rag/notes-cache
+            - name: CHROMA_PATH
+              value: /app/notes-rag/chroma-cache
+            - name: NOTES_REPO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: notes-rag-secret
+                  key: repo_url
+            - name: NOTES_BRANCH
+              valueFrom:
+                secretKeyRef:
+                  name: notes-rag-secret
+                  key: branch
+            - name: TZ
+              value: Europe/Amsterdam
+            - name: LOG_LEVEL
+              value: DEBUG
+          ports:
+            - containerPort: 9099
+              name: http
+          resources:
+            requests:
+              memory: 256Mi
+            limits:
+              memory: 1024Mi # Peak at rebuild
+          volumeMounts:
+            - mountPath: /app/notes-rag/notes-cache
+              name: persistent-data
+            - mountPath: /app/notes-rag/chroma-cache
+              name: persistent-data
+      volumes:
+        - name: persistent-data
+          persistentVolumeClaim:
+            claimName: notes-rag-persistent

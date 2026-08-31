@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: notes-rag
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/davmacario/dmhosted-infra
+    targetRevision: main
+    path: kubernetes/apps/notes-rag
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: notes-rag
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
