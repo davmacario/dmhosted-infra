@@ -32,7 +32,7 @@ spec:
             - name: NOTES_DIRECTORY
               value: /mnt/notes-rag/notes-cache/notes
             - name: CHROMA_PATH
-              value: /mnt/notes-rag/chroma-cache/db
+              value: /mnt/notes-rag/chroma-cache
             - name: NOTES_REPO_URL
               valueFrom:
                 secretKeyRef:
