@@ -32,8 +32,8 @@ spec:
       dnsConfig:
         nameservers:
           - 1.1.1.1
+          - 8.8.8.8
           - 100.127.99.35
-          - 192.168.178.2
         searches:
           - speedtest-tracker.svc.cluster.local
         options:
@@ -41,7 +41,7 @@ spec:
             value: "5"
       containers:
         - name: speedtest-tracker
-          image: lscr.io/linuxserver/speedtest-tracker:v1.14.7-ls167
+          image: lscr.io/linuxserver/speedtest-tracker:v1.15.0-ls170
           env:
             - name: PUID
               value: "1000"
@@ -75,7 +75,9 @@ spec:
             - name: SPEEDTEST_SCHEDULE
               value: 0 */4 * * * # Every 4 hours
             - name: SPEEDTEST_SERVERS
-              value: "32582"
+              value: "32582,65026,10644"
+            - name: PRUNE_RESULTS_OLDER_THAN
+              value: "60"
             - name: APP_URL
               value: https://speedtest.internal.dmhosted.com
             - name: ASSET_URL
