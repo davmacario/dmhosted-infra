@@ -32,7 +32,7 @@ spec:
             - name: NOTES_DIRECTORY
               value: /app/notes-rag/notes-cache/repo
             - name: CHROMA_PATH
-              value: /app/notes-rag/chroma-cache
+              value: /app/notes-rag/chroma-cache/db
             - name: NOTES_REPO_URL
               valueFrom:
                 secretKeyRef:
@@ -57,8 +57,10 @@ spec:
               memory: 1024Mi # Peak at rebuild
           volumeMounts:
             - mountPath: /app/notes-rag/notes-cache
+              subPath: repo
               name: persistent-data
             - mountPath: /app/notes-rag/chroma-cache
+              subPath: db
               name: persistent-data
       volumes:
         - name: persistent-data
