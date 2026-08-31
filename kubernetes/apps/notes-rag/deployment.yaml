@@ -24,6 +24,7 @@ spec:
         - name: notes-rag
           image: ghcr.io/davmacario/notes-rag:v1.1.1
           command:
+            - notes-rag
             - --rebuild-on-start
           env:
             - name: REBUILD_CRON
