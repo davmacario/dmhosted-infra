@@ -30,7 +30,7 @@ spec:
             - name: REBUILD_CRON
               value: "0 */6 * * *"
             - name: NOTES_DIRECTORY
-              value: /app/notes-rag/notes-cache
+              value: /app/notes-rag/notes-cache/repo
             - name: CHROMA_PATH
               value: /app/notes-rag/chroma-cache
             - name: NOTES_REPO_URL
