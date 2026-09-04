@@ -38,7 +38,7 @@ spec:
               app: dmhosted-blog
       containers:
         - name: dmhosted-blog
-          image: ghcr.io/davmacario/dmhosted-blog:1.0.1
+          image: ghcr.io/davmacario/dmhosted-blog:v1.1.0
           ports:
             - name: http
               containerPort: 8080
