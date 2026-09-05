@@ -126,6 +126,32 @@ Then, provide your admin token created [before](#admin-token).
 
 See [SMTP Configuration](./smtp-configuration.md)
 
+### YubiKey configuration
+
+> This assumes a fresh new YubiKey (in my case, series 5C NFC).
+
+#### Setting up YubiKey (first time usage)
+
+We need the YubiKey Manager CLI, that can be installed with `pip` (or `pipx`):
+
+```bash
+pipx install yubikey-manager
+```
+
+Then, verify installation with:
+
+```bash
+ykman --version
+```
+
+Sample output:
+
+```text
+YubiKey Manager (ykman) version: 5.9.2
+```
+
+Next, we need to
+
 ---
 
 ## Links

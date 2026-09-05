@@ -39,6 +39,10 @@ ports:
   websecure:
     port: 443
     http:
+      # Middlewares applied to every router (from every ingressRoute)
+      # See `extraObjects` for definition
+      middlewares:
+        - traefik-tailscale-default-headers@kubernetescrd
       tls:
         enabled: true
     transport:
@@ -84,3 +88,24 @@ metrics:
     addServicesLabels: true
     # Latency buckets in ms
     buckets: "0.001,0.0025,0.005,0.01,0.025,0.05,0.1,0.25,0.5,1,2.5,5,10"
+
+accessLog:
+  enabled: true
+
+extraObjects:
+  # Default headers for all routes
+  - apiVersion: traefik.io/v1alpha1
+    kind: Middleware
+    metadata:
+      name: default-headers
+    spec:
+      headers:
+        browserXssFilter: true
+        contentTypeNosniff: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 15552000
+        customFrameOptionsValue: SAMEORIGIN
+        customRequestHeaders:
+          X-Forwarded-Proto: https

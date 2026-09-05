@@ -69,24 +69,58 @@ kubectl get svc -n traefik -o wide  # Verify external IP is MetalLB one, and the
 
 Note that any traffic that will be sent to the virtual IP assigned to the Traefik service (of type `LoadBalancer`) will reach Traefik.
 
-## Setting up header-based routing
+## Default security headers
 
-Next, we will create a Traefik **Middleware** which will allow to apply specific HTTP headers for specific routes.
-See the config in [../kubernetes/traefik/default-headers.yaml](../kubernetes/traefik/default-headers.yaml).
+A `default-headers` middleware sets HSTS, `X-Content-Type-Options`, `X-Frame-Options` and
+`X-XSS-Protection` on every response.
 
-```bash
-kubectl apply -f ./kubernetes/traefik/default-headers.yaml
+Defining a `Middleware` object is not enough on its own: it does nothing until some IngressRoute
+explicitly references it by name. To make it global, the object is created via the chart's
+`extraObjects`, and then attached to the `websecure` **entrypoint** in the static config:
+
+```yaml
+# kubernetes/traefik/values.yaml
+extraObjects:
+  - apiVersion: traefik.io/v1alpha1
+    kind: Middleware
+    metadata:
+      name: default-headers
+    spec:
+      headers: { ... }
+
+ports:
+  websecure:
+    http:
+      middlewares:
+        - traefik-default-headers@kubernetescrd
 ```
 
-Verify the middleware was installed:
+An entrypoint middleware is prepended to the chain of **every** router on that entrypoint, no
+matter which provider produced it — so it covers `IngressRoute` CRDs and plain `Ingress` objects
+alike, and needs no per-route opt-in. Both Traefik installs declare it independently, so neither
+depends on the other.
+
+Verify:
 
 ```bash
-kubectl get middleware  # Should display `default-headers`
+kubectl get middleware -A | grep default-headers   # one per Traefik install
+curl -sI https://whoami.internal.dmhosted.com | grep -i strict-transport-security
 ```
 
-> [!NOTE]
+> [!WARNING]
 >
-> This middleware is set up globally, for the whole cluster.
+> The qualified name is `<namespace>-<name>@kubernetescrd`, so the two installs reference
+> **different** strings: `traefik-default-headers@kubernetescrd` and
+> `traefik-tailscale-default-headers@kubernetescrd`. Moving either release to another namespace
+> silently breaks the reference, and every router on `websecure` will start erroring — keep
+> `ports.websecure.http.middlewares` in sync with the release namespace.
+
+> [!IMPORTANT]
+>
+> This applies to *every* route on `websecure`, including the Traefik dashboards. In particular
+> `customRequestHeaders.X-Forwarded-Proto: https` **overwrites** the incoming header for all
+> backends. That is correct here because `websecure` is TLS-only, but it means backends can no
+> longer see the original scheme.
 
 ## Setting up dashboard access
 
