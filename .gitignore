@@ -150,3 +150,6 @@ dmypy.json
 # NOTE: *-secret-sealed.yaml identifies the sealed secrets (git safe)
 *secret.yaml
 *secrets.yaml
+
+# Default values files (used for development, when adding new Helm chart)
+**/default-values.yaml
