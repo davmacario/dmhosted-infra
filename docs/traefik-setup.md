@@ -96,7 +96,7 @@ ports:
 ```
 
 An entrypoint middleware is prepended to the chain of **every** router on that entrypoint, no
-matter which provider produced it — so it covers `IngressRoute` CRDs and plain `Ingress` objects
+matter which provider produced it - so it covers `IngressRoute` CRDs and plain `Ingress` objects
 alike, and needs no per-route opt-in. Both Traefik installs declare it independently, so neither
 depends on the other.
 
@@ -117,7 +117,7 @@ curl -sI https://whoami.internal.dmhosted.com | grep -i strict-transport-securit
 
 > [!IMPORTANT]
 >
-> This applies to *every* route on `websecure`, including the Traefik dashboards. In particular
+> This applies to _every_ route on `websecure`, including the Traefik dashboards. In particular
 > `customRequestHeaders.X-Forwarded-Proto: https` **overwrites** the incoming header for all
 > backends. That is correct here because `websecure` is TLS-only, but it means backends can no
 > longer see the original scheme.
