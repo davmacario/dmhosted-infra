@@ -27,7 +27,7 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: notes-rag
-          image: ghcr.io/davmacario/notes-rag:v1.1.1
+          image: ghcr.io/davmacario/notes-rag:v1.1.2
           command:
             - notes-rag
             - --rebuild-on-start
