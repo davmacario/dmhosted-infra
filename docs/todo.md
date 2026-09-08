@@ -18,6 +18,7 @@ tags:
 - [x] Install Stirling PDF
 - [x] Install [Uptime Kuma](https://github.com/louislam/uptime-kuma)
   - Configured 2 dashboards (hosts & ~~internal~~ services)
+  - [ ] Configure another uptime-kuma instance or _look for distributed alternative_
 - [x] Kube-Prometheus stack
   - [x] Enable alerts
   - [x] Configure Grafana admin user password using secret
@@ -60,4 +61,6 @@ tags:
   - I expect the setup to be a tiny bit more complicated, as it will need a LoadBalancer service type (it is not HTTP...)
   - Actually, anything that would allow syncing obsidian works (should be in a de-centralized fashion, that's why syncthing)
 - [x] Blog
+  - [ ] Configure replica on separate machine (`puppydm01`) using cloned cloudflared (so that it is seen as the same exact tunnel)
+    - Also set up Service and ServiceMonitor to scrape it
 - [ ] Setup for keeping apps/charts up to date
