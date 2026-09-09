@@ -1,0 +1,88 @@
+# $schema: https://raw.githubusercontent.com/grafana-community/helm-charts/refs/heads/main/charts/loki/values.schema.json
+# Helm values for loki (oci://ghcr.io/grafana-community/helm-charts/loki)
+deploymentMode: Monolithic
+commonLabels:
+  workload: monitoring
+
+loki:
+  auth_enabled: false
+  commonConfig:
+    replication_factor: 1
+  storage:
+    type: s3
+    bucketNames:
+      chunks: loki-chunks
+      ruler: loki-ruler
+    s3:
+      endpoint: rustfs.internal.dmhosted.com
+      region: eu-west-1
+      s3ForcePathStyle: true
+      insecure: false
+      # Expanded by Loki - variables are mounted as secret
+      # See https://grafana.com/docs/loki/latest/configure/#use-environment-variables-in-the-configuration
+      secretAccessKey: ${S3_SECRET_ACCESS_KEY}
+      accessKeyId: ${S3_ACCESS_KEY_ID}
+  schemaConfig:
+    configs:
+      - from: "2024-04-01"
+        store: tsdb
+        object_store: s3
+        schema: v13
+        index:
+          prefix: loki_index_
+          period: 24h
+  limits_config:
+    allow_structured_metadata: true
+    volume_enabled: true
+    retention_period: 168h # 7 days
+    reject_old_samples_max_age: 168h
+    reject_old_samples: true
+
+  rulerConfig:
+    enable_api: true
+
+  structuredConfig:
+    compactor:
+      working_directory: /var/loki/compactor
+      retention_enabled: true
+      delete_request_store: s3
+
+singleBinary:
+  replicas: 1
+  # Allows using env variables in loki config (see loki.storage.s3)
+  extraArgs:
+    - "-config.expand-env=true"
+  extraEnvFrom:
+    - secretRef:
+        name: loki-s3
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClass: longhorn-singlecopy
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi
+
+# TODO
+# networkPolicy:
+
+backend: { replicas: 0 }
+read: { replicas: 0 }
+write: { replicas: 0 }
+ingester: { replicas: 0 }
+querier: { replicas: 0 }
+queryFrontend: { replicas: 0 }
+queryScheduler: { replicas: 0 }
+distributor: { replicas: 0 }
+compactor: { replicas: 0 }
+indexGateway: { replicas: 0 }
+bloomPlanner: { replicas: 0 }
+bloomBuilder: { replicas: 0 }
+bloomGateway: { replicas: 0 }
+chunksCache: { enabled: false }
+resultsCache: { enabled: false }
+lokiCanary: { enabled: false }
+test: { enabled: false }
