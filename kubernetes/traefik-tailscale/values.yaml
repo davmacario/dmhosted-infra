@@ -100,7 +100,7 @@ extraObjects:
       name: default-headers
     spec:
       headers:
-        browserXssFilter: true
+        customBrowserXSSValue: "0"
         contentTypeNosniff: true
         forceSTSHeader: true
         stsIncludeSubdomains: true
