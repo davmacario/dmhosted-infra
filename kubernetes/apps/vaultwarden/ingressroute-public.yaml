@@ -25,6 +25,16 @@ spec:
   entryPoints:
     - websecure
   routes:
+    # NOTE: required to make 2FA work properly - unset header `X-Frame-Options`
+    # Overrides default headers
+    - match: Host(`vaultwarden.dmhosted.com`) && PathRegexp(`^/[a-z0-9-]*connector\.html%`)
+      kind: Rule
+      priority: 100
+      middlewares:
+        - name: unset-frame-options
+      services:
+        - name: vaultwarden
+          port: 80
     - match: Host(`vaultwarden.dmhosted.com`)
       kind: Rule
       services:

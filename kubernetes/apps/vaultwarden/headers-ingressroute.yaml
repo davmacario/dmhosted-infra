@@ -1,0 +1,12 @@
+---
+# Used to unset the `X-Frame-Options` header, as required by Vaultwarden for 2FA
+# connector calls.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: unset-frame-options
+  namespace: vaultwarden
+spec:
+  headers:
+    customResponseHeaders:
+      X-Frame-Options: ""
