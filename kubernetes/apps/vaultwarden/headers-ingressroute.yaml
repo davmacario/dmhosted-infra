@@ -8,4 +8,5 @@ metadata:
   namespace: vaultwarden
 spec:
   headers:
-    customFrameOptionsValue: ""
+    customResponseHeaders:
+      X-Frame-Options: ""
