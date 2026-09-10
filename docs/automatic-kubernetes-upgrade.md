@@ -17,7 +17,7 @@ The end goal is to install a special _Controller_ in our cluster that is able to
 > [!WARNING]
 >
 > **IMPORTANT NOTICE**: the following will probably break the usability of the Ansible playbook used to install the cluster, as it
-> will update hte version of K3s running there.
+> will update the version of K3s running there.
 > Use with caution.
 >
 > (on a side note, I am not sure that the roles used in that playbook are still kept up to date)
