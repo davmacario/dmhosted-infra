@@ -1,14 +1,20 @@
 # $schema: https://raw.githubusercontent.com/grafana-community/helm-charts/refs/heads/main/charts/loki/values.schema.json
 # Helm values for loki (oci://ghcr.io/grafana-community/helm-charts/loki)
+
+# Deploy in Monolithic (former 'SingleBinary') mode
+# All the stack in a single binary
 deploymentMode: Monolithic
+
 commonLabels:
   workload: monitoring
+  app: loki
 
 loki:
   auth_enabled: false
   commonConfig:
+    # Required in Monolithic mode
     replication_factor: 1
-  storage:
+  storage: # configure **current** storage backend (see schemaConfig.configs)
     type: s3
     bucketNames:
       chunks: loki-chunks
@@ -20,17 +26,22 @@ loki:
       insecure: false
       # Expanded by Loki - variables are mounted as secret
       # See https://grafana.com/docs/loki/latest/configure/#use-environment-variables-in-the-configuration
-      secretAccessKey: ${S3_SECRET_ACCESS_KEY}
-      accessKeyId: ${S3_ACCESS_KEY_ID}
+      secretAccessKey: "${S3_SECRET_ACCESS_KEY}"
+      accessKeyId: "${S3_ACCESS_KEY_ID}"
   schemaConfig:
+    # 'configs' is used to set the specific schema, object store and index of
+    # colleced logs, starting from a specified date/timestamp in the collected
+    # logs.
+    # This allows to update the schema by adding an extra entry that will take
+    # over from 'from'
     configs:
-      - from: "2024-04-01"
+      - from: "2024-04-01" # from logs - can put whatever date from current day on
         store: tsdb
-        object_store: s3
+        object_store: s3 # must match loki.storage.type
         schema: v13
         index:
-          prefix: loki_index_
-          period: 24h
+          prefix: loki_index_ # object key prefix for index file
+          period: 24h # use one index table (i.e., file) per 'period' of data
   limits_config:
     allow_structured_metadata: true
     volume_enabled: true
@@ -49,15 +60,25 @@ loki:
 
 singleBinary:
   replicas: 1
+  kind: StatefulSet
+  deploymentStrategy: # since persistence is enabled and selected SC does not do RWX
+    type: Recreate
+    rollingUpdate: null
   # Allows using env variables in loki config (see loki.storage.s3)
   extraArgs:
     - "-config.expand-env=true"
   extraEnvFrom:
     - secretRef:
         name: loki-s3
+  # Configure "cache" volume, not bulk storage (for which we have s3)
+  # According to Claude, used for WAL, compactor, and tsdb shipper cache (?)
   persistence:
+    whenScaled: Delete
+    whenDeleted: Delete
     enabled: true
     size: 5Gi
+    accessModes:
+      - ReadWriteOnce
     storageClass: longhorn-singlecopy
   resources:
     requests:
@@ -65,24 +86,44 @@ singleBinary:
       memory: 256Mi
     limits:
       memory: 1Gi
+      memory: 512Mi
 
-# TODO
+# TODO: only allow reaching Loki from Grafana
 # networkPolicy:
 
-backend: { replicas: 0 }
-read: { replicas: 0 }
-write: { replicas: 0 }
-ingester: { replicas: 0 }
-querier: { replicas: 0 }
-queryFrontend: { replicas: 0 }
-queryScheduler: { replicas: 0 }
-distributor: { replicas: 0 }
-compactor: { replicas: 0 }
-indexGateway: { replicas: 0 }
-bloomPlanner: { replicas: 0 }
-bloomBuilder: { replicas: 0 }
-bloomGateway: { replicas: 0 }
-chunksCache: { enabled: false }
-resultsCache: { enabled: false }
-lokiCanary: { enabled: false }
-test: { enabled: false }
+# deactivate unused components (running in Monolithic mode)
+backend:
+  replicas: 0
+read:
+  replicas: 0
+write:
+  replicas: 0
+ingester:
+  replicas: 0
+querier:
+  replicas: 0
+queryFrontend:
+  replicas: 0
+queryScheduler:
+  replicas: 0
+distributor:
+  replicas: 0
+compactor:
+  replicas: 0
+indexGateway:
+  replicas: 0
+bloomPlanner:
+  replicas: 0
+bloomBuilder:
+  replicas: 0
+bloomGateway:
+  replicas: 0
+
+chunksCache:
+  enabled: false
+resultsCache:
+  enabled: false
+lokiCanary:
+  enabled: false
+test:
+  enabled: false
