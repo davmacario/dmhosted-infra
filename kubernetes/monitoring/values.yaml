@@ -1,4 +1,4 @@
-# Custom values for kube-prometheus-stack (v 88.3.0)
+# Custom values for kube-prometheus-stack (v90.4.0)
 nameOverride: ""
 
 prometheusOperator:
@@ -169,6 +169,16 @@ grafana:
     size: 5Gi
   ingress:
     enabled: false # Using IngressRoute (traefik)
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      access: proxy
+      url: http://loki-gateway.monitoring.svc.cluster.local
+      isDefault: false
+      editable: false
+      jsonData:
+        timeout: 60
+        maxLines: 1000
 
 # Fix for firing alerts
 kubeControllerManager:
