@@ -485,9 +485,7 @@ Loki is a lightweight alternative to Elasticsearch when it comes to log ingestio
 It is easy to set up and can be ran as a single pod, which makes it especially well suited for
 environments where resources are constrained (like a homelab).
 
-Loki can be installed using Helm, from the `oci://ghcr.io/grafana-community/helm-charts/loki`
-repository, and it can be easily plugged into an existing Grafana instance (from the
-`kube-prometheus-stack` values, even).
+Loki can be installed using Helm, from the `oci://ghcr.io/grafana-community/helm-charts` repository, using the `loki` chart, and it can be easily plugged into an existing Grafana instance (from the `kube-prometheus-stack` values, even).
 
 ---
 
