@@ -1,0 +1,25 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cluster-cpu-rules
+  namespace: monitoring
+  labels:
+    # required for being discovered
+    release: prometheus-stack
+spec:
+  groups:
+    - name: cluster-cpu.rules
+      rules:
+        - alert: ClusterIdleCpuUsageHigh
+          expr: cluster:node_cpu:ratio_rate5m > 0.25
+          for: 1h
+          keep_firing_for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Cluster-wide CPU usage above 25%.
+            description: >-
+              Cluster-wide CPU usage has been above 25% for more than 1 hour
+              (currently {{ $value | humanizePercentage }}). With no active
+              workload this suggests something is burning CPU in the background.
+              Ignore this warning if there are active services currently.

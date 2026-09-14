@@ -464,28 +464,65 @@ Explaination:
 
 #### Configuring alerting rules in Prometheus
 
-> TODO
-
 > [!NOTE]
 >
 > The Kube-Prometheus stack comes with some default alert rules which are good enough to start.
 
-## Log ingestion with Loki
+Alerts can be configured using the `PrometheusRule` CRD provided by the `kube-prometheus-stack` chart.
+The CRD supports defining alerts using the usual Prometheus recording rule syntax, see [docs](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/).
+
+As an example, I configured an alert rule throwing a warning if the overall cpu usage of the cluster exceeds 25% for 1 hour (and until 10 minutes go by without the expression being true).
+See [here](../kubernetes/monitoring/configuration/alerts/cluster-cpu-prometheusrule.yaml) for the definition:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cluster-cpu-rules
+  namespace: monitoring
+  labels:
+    # required for being discovered
+    release: prometheus-stack
+spec:
+  groups:
+    - name: cluster-cpu.rules
+      rules:
+        - alert: ClusterIdleCpuUsageHigh
+          expr: cluster:node_cpu:ratio_rate5m > 0.25
+          for: 1h
+          keep_firing_for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Cluster-wide CPU usage above 25%.
+            description: >-
+              Cluster-wide CPU usage has been above 25% for more than 1 hour
+              (currently {{ $value | humanizePercentage }}). With no active
+              workload this suggests something is burning CPU in the background.
+              Ignore this warning if there are active services currently.
+```
+
+> [!important]
+>
+> As for `ServiceMonitor`s, it is required to match the `release` label in order to instruct Prometheus to pick the alert up.
+
+## Log Ingestion with Loki and Alloy
 
 > 2026-09-06
 
 A missing component in the current setup is something to collect application logs.
 
-In my case, I would like to collect access logs of my public services by ingesting them from
-`cloudflared` and `traefik` (public instance).
+My main use case is to collect access logs of my public services by ingesting them from `cloudflared` and `traefik` (public instance).
 
-This is where **Loki** comes into play.
+This is where **Loki** and **Alloy** come into play.
 
 Loki is a lightweight alternative to Elasticsearch when it comes to log ingestion.
-It is easy to set up and can be ran as a single pod, which makes it especially well suited for
-environments where resources are constrained (like a homelab).
+It is easy to set up and can be ran as a single pod, which makes it especially well suited for environments where resources are constrained (like a homelab).
+It can be installed using Helm, from the `oci://ghcr.io/grafana-community/helm-charts` repository, using the `loki` chart, and it can be easily plugged into an existing Grafana instance (from the `kube-prometheus-stack` values, even).
 
-Loki can be installed using Helm, from the `oci://ghcr.io/grafana-community/helm-charts` repository, using the `loki` chart, and it can be easily plugged into an existing Grafana instance (from the `kube-prometheus-stack` values, even).
+Alloy, instead, is a **telemetry collector**.
+Loki does not perform scraping, unlike Prometheus, so we need Alloy to be able to push logs to it.
+The way this is achieved is by tailing logs from a specific source (e.g., K8s pods), and routing them to Loki's ingestion endpoint.
 
 ---
 
