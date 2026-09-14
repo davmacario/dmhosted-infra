@@ -470,6 +470,25 @@ Explaination:
 >
 > The Kube-Prometheus stack comes with some default alert rules which are good enough to start.
 
+## Log ingestion with Loki
+
+> 2026-09-06
+
+A missing component in the current setup is something to collect application logs.
+
+In my case, I would like to collect access logs of my public services by ingesting them from
+`cloudflared` and `traefik` (public instance).
+
+This is where **Loki** comes into play.
+
+Loki is a lightweight alternative to Elasticsearch when it comes to log ingestion.
+It is easy to set up and can be ran as a single pod, which makes it especially well suited for
+environments where resources are constrained (like a homelab).
+
+Loki can be installed using Helm, from the `oci://ghcr.io/grafana-community/helm-charts/loki`
+repository, and it can be easily plugged into an existing Grafana instance (from the
+`kube-prometheus-stack` values, even).
+
 ---
 
 ## Incidents

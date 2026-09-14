@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring-loki
+  namespace: argocd
+  labels:
+    name: monitoring
+spec:
+  project: default
+  sources:
+    - repoURL: oci://ghcr.io/grafana-community/helm-charts
+      targetRevision: 18.12.1
+      helm:
+        releaseName: loki
+        valueFiles:
+          - $values/kubernetes/monitoring-loki/values.yaml
+    - repoURL: https://github.com/davmacario/dmhosted-infra
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/davmacario/dmhosted-infra
+      targetRevision: main
+      path: kubernetes/monitoring-loki
+      directory:
+        recurse: true
+        exclude: values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true
