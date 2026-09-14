@@ -85,6 +85,13 @@ singleBinary:
       cpu: 500m
       memory: 512Mi
 
+# The memberlist service is headless; without this its DNS name does not resolve
+# until the pod is Ready, and the pod cannot become Ready until it joins the
+# ring -> ~90s of "failed to resolve loki-memberlist..." warnings at startup.
+memberlist:
+  service:
+    publishNotReadyAddresses: true
+
 # TODO: only allow reaching Loki from Grafana
 # networkPolicy:
 
