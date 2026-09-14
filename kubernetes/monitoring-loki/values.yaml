@@ -64,9 +64,6 @@ singleBinary:
   deploymentStrategy: # since persistence is enabled and selected SC does not do RWX
     type: Recreate
     rollingUpdate: null
-  # Allows using env variables in loki config (see loki.storage.s3)
-  extraArgs:
-    - "-config.expand-env=true"
   extraEnvFrom:
     - secretRef:
         name: loki-s3
