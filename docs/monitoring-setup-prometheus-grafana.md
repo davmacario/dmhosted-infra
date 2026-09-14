@@ -506,6 +506,8 @@ spec:
 >
 > As for `ServiceMonitor`s, it is required to match the `release` label in order to instruct Prometheus to pick the alert up.
 
+In order to confirm that the rules are picked up correctly by Prometheus, we can log into Grafana and navigate to "Alerting" > "Alert rules", and look for it in the section listing Prometheus' alert rules.
+
 ## Log Ingestion with Loki and Alloy
 
 > 2026-09-06
