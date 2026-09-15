@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fluent-bit
+  namespace: argocd
+  labels:
+    name: monitoring
+spec:
+  project: default
+  sources:
+    - repoURL: ghcr.io/fluent/helm-charts/fluent-bit-collector
+      chart: fluent-bit-collector
+      targetRevision: 1.1.2
+      helm:
+        releaseName: fluent-bit-collector
+        valueFiles:
+          - $values/kubernetes/monitoring/fluent-bit/values.yaml
+    - repoURL: https://github.com/davmacario/dmhosted-infra
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/davmacario/dmhosted-infra
+      targetRevision: main
+      path: kubernetes/monitoring/fluent-bit
+      directory:
+        recurse: true
+        exclude: values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true

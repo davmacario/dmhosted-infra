@@ -1,0 +1,105 @@
+# Values for Fluent Bit Collector (1.1.2)
+
+commonLabels:
+  app: fluent-bit
+
+# Create service allowing to scrape metrics (prometheus format)
+service:
+  enabled: true
+  httpPort: 202
+
+serviceMonitor:
+  enabled: true
+  additionalLabels:
+    release: prometheus-stack # Matches deployed Prometheus' ServiceMonitorSelector
+
+dashboards:
+  enabled: true
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 100m
+    memory: 192Mi
+
+# Persistent buffers (where data is stored before being shipped)
+storage:
+  enabled: true
+  hostPath: /var/fluent-bit/data
+
+# NOTE: in default values, there is the following:
+# hostVolumes:
+#   - name: machine-id
+#     hostPath:
+#       path: /etc/machine-id
+#       type: File
+#     mountPath: /etc/machine-id
+#   - name: logs
+#     hostPath:
+#       path: /var/log
+#       type: Directory
+#     mountPath: /var/log
+#
+# In particular, mounting /var/log allows Fluent Bit pods (1 per host, since
+# daemonset) to have access to /var/log/containers, with logs from all K8s
+# containers.
+
+# Actual Fluent Bit config (YAML)
+config:
+  service:
+    log_level: info
+    http_listen: 0.0.0.0
+
+  parsers:
+    - name: kubernetes-tag # From default values, keep it to avoid breaking
+      format: regex
+      regex: ^(?<namespace_name>[^.]+)\.(?<pod_name>[^.]+)\.(?<container_name>[^.]+)
+    - name: traefik-json # Parse Traefik logs (JSON format from config)
+      format: json
+
+  inputs:
+    - name: tail
+      alias: k8s-traefik-logs
+      # log filename is <pod>_<namespace>_<container>-<id>.log
+      path: /var/log/containers/*_traefik_*.log
+      tag_regex: (?<pod_name>[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)_(?<namespace_name>[^_]+)_(?<container_name>.+)-
+      tag: kube.<namespace_name>.<pod_name>.<container_name>
+      read_from_head: true
+      multiline.parser: cri
+      skip_long_lines: true
+      skip_empty_lines: true
+      storage.type: ${STORAGE_TYPE_PREFER_FS}
+      db: ${STORAGE_PATH}/tail.db
+      processors:
+        logs:
+          - name: kubernetes
+            use_kubelet: ${KUBELET_ENDPOINT}
+            kubelet_host: ${NODE_IP}
+            kubelet_port: 10250
+            kube_tag_prefix: kube.
+            regex_parser: kubernetes-tag
+            k8s-logging.parser: true
+            k8s-logging.exclude: true
+
+  filters:
+    # Unpack 'log' key from json
+    - name: parser
+      match: kube.traefik.*
+      key_name: log
+      parser: traefik-json
+      reserve_data: true
+
+  outputs:
+    - name: loki # Send all `kube.*` logs to Loki
+      alias: loki-out
+      match: kube.*
+      host: loki-gateway.loki.svc.cluster.local
+      port: 80
+      uri: /loki/api/v1/push
+      line_format: json
+      auto_kubernetes_labels: "off"
+      labels: "job=fluent-bit, namespace=$kubernetes['namespace_name'], pod=$kubernetes['pod_name'], container=$kubernetes['container_name']"
+      remove_keys: kubernetes
+      retry_limit: 5
