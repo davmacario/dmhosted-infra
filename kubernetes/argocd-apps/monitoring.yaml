@@ -14,13 +14,13 @@ spec:
       helm:
         releaseName: prometheus-stack
         valueFiles:
-          - $values/kubernetes/monitoring/values.yaml
+          - $values/kubernetes/monitoring/kube-prometheus/values.yaml
     - repoURL: https://github.com/davmacario/dmhosted-infra
       targetRevision: main
       ref: values
     - repoURL: https://github.com/davmacario/dmhosted-infra
       targetRevision: main
-      path: kubernetes/monitoring
+      path: kubernetes/monitoring/kube-prometheus
       directory:
         recurse: true
         exclude: values.yaml
