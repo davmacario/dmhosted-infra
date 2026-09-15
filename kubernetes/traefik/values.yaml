@@ -82,6 +82,7 @@ metrics:
 
 accessLog:
   enabled: true
+  format: json
 
 extraObjects:
   # Default headers for all routes
