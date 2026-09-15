@@ -96,7 +96,7 @@ config:
       - name: loki # Send all `kube.*` logs to Loki
         alias: loki-out
         match: kube.*
-        host: loki-gateway.loki.svc.cluster.local
+        host: loki-gateway.monitoring.svc.cluster.local
         port: 80
         uri: /loki/api/v1/push
         line_format: json
