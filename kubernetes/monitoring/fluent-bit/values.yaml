@@ -59,47 +59,48 @@ config:
     - name: traefik-json # Parse Traefik logs (JSON format from config)
       format: json
 
-  inputs:
-    - name: tail
-      alias: k8s-traefik-logs
-      # log filename is <pod>_<namespace>_<container>-<id>.log
-      path: /var/log/containers/*_traefik_*.log
-      tag_regex: (?<pod_name>[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)_(?<namespace_name>[^_]+)_(?<container_name>.+)-
-      tag: kube.<namespace_name>.<pod_name>.<container_name>
-      read_from_head: true
-      multiline.parser: cri
-      skip_long_lines: true
-      skip_empty_lines: true
-      storage.type: ${STORAGE_TYPE_PREFER_FS}
-      db: ${STORAGE_PATH}/tail.db
-      processors:
-        logs:
-          - name: kubernetes
-            use_kubelet: ${KUBELET_ENDPOINT}
-            kubelet_host: ${NODE_IP}
-            kubelet_port: 10250
-            kube_tag_prefix: kube.
-            regex_parser: kubernetes-tag
-            k8s-logging.parser: true
-            k8s-logging.exclude: true
+  pipeline:
+    inputs:
+      - name: tail
+        alias: k8s-traefik-logs
+        # log filename is <pod>_<namespace>_<container>-<id>.log
+        path: /var/log/containers/*_traefik_*.log
+        tag_regex: (?<pod_name>[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)_(?<namespace_name>[^_]+)_(?<container_name>.+)-
+        tag: kube.<namespace_name>.<pod_name>.<container_name>
+        read_from_head: true
+        multiline.parser: cri
+        skip_long_lines: true
+        skip_empty_lines: true
+        storage.type: ${STORAGE_TYPE_PREFER_FS}
+        db: ${STORAGE_PATH}/tail.db
+        processors:
+          logs:
+            - name: kubernetes
+              use_kubelet: ${KUBELET_ENDPOINT}
+              kubelet_host: ${NODE_IP}
+              kubelet_port: 10250
+              kube_tag_prefix: kube.
+              regex_parser: kubernetes-tag
+              k8s-logging.parser: true
+              k8s-logging.exclude: true
 
-  filters:
-    # Unpack 'log' key from json
-    - name: parser
-      match: kube.traefik.*
-      key_name: log
-      parser: traefik-json
-      reserve_data: true
+    filters:
+      # Unpack 'log' key from json
+      - name: parser
+        match: kube.traefik.*
+        key_name: log
+        parser: traefik-json
+        reserve_data: true
 
-  outputs:
-    - name: loki # Send all `kube.*` logs to Loki
-      alias: loki-out
-      match: kube.*
-      host: loki-gateway.loki.svc.cluster.local
-      port: 80
-      uri: /loki/api/v1/push
-      line_format: json
-      auto_kubernetes_labels: "off"
-      labels: "job=fluent-bit, namespace=$kubernetes['namespace_name'], pod=$kubernetes['pod_name'], container=$kubernetes['container_name']"
-      remove_keys: kubernetes
-      retry_limit: 5
+    outputs:
+      - name: loki # Send all `kube.*` logs to Loki
+        alias: loki-out
+        match: kube.*
+        host: loki-gateway.loki.svc.cluster.local
+        port: 80
+        uri: /loki/api/v1/push
+        line_format: json
+        auto_kubernetes_labels: "off"
+        labels: "job=fluent-bit, namespace=$kubernetes['namespace_name'], pod=$kubernetes['pod_name'], container=$kubernetes['container_name']"
+        remove_keys: kubernetes
+        retry_limit: 5
