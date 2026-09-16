@@ -6,7 +6,7 @@ commonLabels:
 # Create service allowing to scrape metrics (prometheus format)
 service:
   enabled: true
-  httpPort: 202
+  httpPort: 2020
 
 serviceMonitor:
   enabled: true
