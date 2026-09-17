@@ -516,15 +516,127 @@ A missing component in the current setup is something to collect application log
 
 My main use case is to collect access logs of my public services by ingesting them from `cloudflared` and `traefik` (public instance).
 
-This is where **Loki** and **Alloy** come into play.
+This is where **Loki** comes into play.
 
-Loki is a lightweight alternative to Elasticsearch when it comes to log ingestion.
+[Loki](https://grafana.com/docs/loki/latest/) is a lightweight alternative to Elasticsearch when it comes to log ingestion.
 It is easy to set up and can be ran as a single pod, which makes it especially well suited for environments where resources are constrained (like a homelab).
 It can be installed using Helm, from the `oci://ghcr.io/grafana-community/helm-charts` repository, using the `loki` chart, and it can be easily plugged into an existing Grafana instance (from the `kube-prometheus-stack` values, even).
 
-Alloy, instead, is a **telemetry collector**.
-Loki does not perform scraping, unlike Prometheus, so we need Alloy to be able to push logs to it.
-The way this is achieved is by tailing logs from a specific source (e.g., K8s pods), and routing them to Loki's ingestion endpoint.
+Loki by itself does not pull logs, however.
+This is why we need another application to collect and push logs to Loki.
+Thanks to my work experience with it, I went with [Fluent Bit](https://fluentbit.io/).
+
+Fluent Bit is a lightweight logging, metrics, and trace processor, and it is a CNCF project.
+Its main strength is its lightweightness, which makes it ideal for containerized environments and low-resource usage.
+
+It is fully configurable via config files, and there is a Helm chart (actually, as of 2026, multiple flavors) for it.
+
+A considered alternative was Grafana Alloy (Promtail replacement), but its footprint would have been excessive (>100MB mem needed per pod) for my k3s setup.
+
+### Installing Loki
+
+Using the Helm chart: `oci://ghcr.io/grafana-community/helm-charts/loki`
+
+Helm values are [here](../kubernetes/monitoring-loki/values.yaml).
+
+Deploying in 'Monolithic' mode (formerly 'SingleBinary').
+This is the suggested deployment for small setups, where all components of the application are bundled.
+
+As backend storage, I'm using the RustFS instance running on my NAS, providing S3-compatible storage.
+I needed 2 buckets: `loki-chunks` (for log chunks) and `loki-ruler` (for the ruler (?)).
+Both are non versioned and without any lifecycle policies.
+
+Then, I created an access key ID + secret pair and placed them in the `loki-s3` secret, where they will be injected into Loki as the env variables `S3_ACCESS_KEY_ID` and `S3_ACCESS_SECRET_KEY`.
+By default, Loki is launched with `-config.expand-env=true`, which allows referencing env variables in the Loki config (`loki` contents in values.yaml, passed verbatim to the `loki` ConfigMap).
+This allows to reference the secrets from the config without hardcoding any secret in the Helm values.
+
+### Installing Fluent Bit
+
+As anticipated, there are 3 available helm charts: `fluent-bit`, `fluent-bit-collector`, and `fluent-bit-aggregator` in the `oci://ghcr.io/fluent/helm-charts/fluent-bit-collector` repo.
+The [main README](https://github.com/fluent/helm-charts/blob/main/README.md) recomments using either `-collector` or `-aggregator`.
+
+These 2 are more "specific" charts that trade configurability for much easier values.yaml files, and they serve 2 different purposes.
+
+- `-collector` is used to deploy fluent bit as a DaemonSet (1 pod/node), where it will be watching running pods and forwarding logs to configured destinations.
+  This is clearly what we want.
+- `-aggregator` is instead used to set up a 2-tier collection pipeline and deploy Fluent Bit as a StatefulSet to act as hop between the main collection point and the final log destination.
+  Quite literally what an "aggregator" does...
+  - 2-tier pattern is way too overkill for my setup.
+    It would only be needed if heavy processing of logs is required that should happen in a centralized location rather than on every single node.
+    This pattern is more suited for >10 node clusters (cool!).
+
+We will deploy `fluent-bit-collector`, using [these](../kubernetes/monitoring/fluent-bit/values.yaml) values.
+
+The relevant portion of the values is `config`, which contains the Fluent Bit config in YAML format.
+
+```yaml
+service:
+  log_level: info
+  http_listen: 0.0.0.0
+
+parsers:
+  - name: kubernetes-tag # From default values, keep it to avoid breaking
+    format: regex
+    regex: ^(?<namespace_name>[^.]+)\.(?<pod_name>[^.]+)\.(?<container_name>[^.]+)
+  - name: traefik-json # Parse Traefik logs (JSON format from config)
+    format: json
+
+pipeline:
+  inputs:
+    - name: tail
+      alias: k8s-traefik-logs
+      # log filename is <pod>_<namespace>_<container>-<id>.log
+      path: /var/log/containers/*_traefik_*.log
+      tag_regex: (?<pod_name>[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)_(?<namespace_name>[^_]+)_(?<container_name>.+)-
+      tag: kube.<namespace_name>.<pod_name>.<container_name>
+      read_from_head: true
+      multiline.parser: cri
+      skip_long_lines: true
+      skip_empty_lines: true
+      storage.type: ${STORAGE_TYPE_PREFER_FS}
+      db: ${STORAGE_PATH}/tail.db
+      processors:
+        logs:
+          - name: kubernetes
+            use_kubelet: ${KUBELET_ENDPOINT}
+            kubelet_host: ${NODE_IP}
+            kubelet_port: 10250
+            kube_tag_prefix: kube.
+            regex_parser: kubernetes-tag
+            k8s-logging.parser: true
+            k8s-logging.exclude: true
+
+  filters:
+    # Unpack 'log' key from json
+    - name: parser
+      match: kube.traefik.*
+      key_name: log
+      parser: traefik-json
+      reserve_data: true
+
+  outputs:
+    - name: loki # Send all `kube.*` logs to Loki
+      alias: loki-out
+      match: kube.*
+      host: loki-gateway.monitoring.svc.cluster.local
+      port: 80
+      uri: /loki/api/v1/push
+      line_format: json
+      auto_kubernetes_labels: "off"
+      labels: "job=fluent-bit, namespace=$kubernetes['namespace_name'], pod=$kubernetes['pod_name'], container=$kubernetes['container_name']"
+      remove_keys: kubernetes
+      retry_limit: 5
+```
+
+By default, Fluent Bit mounts 2 paths on the **host**: `/etc/machine-id` (a file), and `/var/log`.
+Kubernetes stores logs for all pods running on a host at `/var/log/containers/`.
+This is why we use the `tail` input, as we can just configure Fluent Bit to look at the files in that folder.
+
+In this specific case, I am just collecting logs from my "primary" Traefik instance (i.e., the one that serves public traffic, in my setup).
+
+Note that we are also using the [Kubernetes filter](https://docs.fluentbit.io/manual/data-pipeline/filters/kubernetes) (`inputs[0].processors.logs[0]`), which is used to inject metadata from Kubernetes in the logs.
+
+Deploying the chart will allow to start ingesting logs into Loki.
 
 ---
 
