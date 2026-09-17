@@ -89,6 +89,7 @@ accessLog:
       names: # Keep cloudflare headers (only for this traefik instance)
         Cf-Connecting-Ip: keep
         Cf-Ipcountry: keep
+        User-Agent: keep
 
 extraObjects:
   # Default headers for all routes

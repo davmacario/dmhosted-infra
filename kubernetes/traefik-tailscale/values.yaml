@@ -92,6 +92,11 @@ metrics:
 accessLog:
   enabled: true
   format: json
+  fields:
+    headers:
+      defaultMode: drop
+      names:
+        User-Agent: keep
 
 extraObjects:
   # Default headers for all routes
