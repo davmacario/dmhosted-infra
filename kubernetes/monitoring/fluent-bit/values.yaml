@@ -61,10 +61,30 @@ config:
 
   pipeline:
     inputs:
-      - name: tail
+      - name: tail # Traefik (primary instance) log
         alias: k8s-traefik-logs
-        # log filename is <pod>_<namespace>_<container>-<id>.log
         path: /var/log/containers/*_traefik_*.log
+        tag_regex: (?<pod_name>[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)_(?<namespace_name>[^_]+)_(?<container_name>.+)-
+        tag: kube.<namespace_name>.<pod_name>.<container_name>
+        read_from_head: true
+        multiline.parser: cri
+        skip_long_lines: true
+        skip_empty_lines: true
+        storage.type: ${STORAGE_TYPE_PREFER_FS}
+        db: ${STORAGE_PATH}/tail.db
+        processors:
+          logs:
+            - name: kubernetes
+              use_kubelet: ${KUBELET_ENDPOINT}
+              kubelet_host: ${NODE_IP}
+              kubelet_port: 10250
+              kube_tag_prefix: kube.
+              regex_parser: kubernetes-tag
+              k8s-logging.parser: true
+              k8s-logging.exclude: true
+      - name: tail # Traefik tailscale logs
+        alias: k8s-traefik-tailscale-logs
+        path: /var/log/containers/*_traefik-tailscale_*.log
         tag_regex: (?<pod_name>[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)_(?<namespace_name>[^_]+)_(?<container_name>.+)-
         tag: kube.<namespace_name>.<pod_name>.<container_name>
         read_from_head: true
