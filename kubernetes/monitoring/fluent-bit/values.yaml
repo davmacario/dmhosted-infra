@@ -105,9 +105,8 @@ config:
               k8s-logging.exclude: true
 
     filters:
-      # Unpack 'log' key from json
       - name: parser
-        match: kube.traefik.*
+        match: kube.traefik*
         key_name: log
         parser: traefik-json
         reserve_data: true
