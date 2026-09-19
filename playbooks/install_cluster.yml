@@ -83,6 +83,21 @@
         rule: allow
         port: "6443"
         proto: tcp
+    - name: Allow etcd peer port
+      community.general.ufw:
+        rule: allow
+        port: "2380"
+        proto: tcp
+    - name: Allow etcd client port
+      community.general.ufw:
+        rule: allow
+        port: "2379"
+        proto: tcp
+    - name: Allow kubelet port
+      community.general.ufw:
+        rule: allow
+        port: "10250"
+        proto: tcp
     - name: Allow pod network
       community.general.ufw:
         rule: allow

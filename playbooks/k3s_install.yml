@@ -8,6 +8,22 @@
         that: ansible_version.full is version_compare('2.11', '>=')
         msg: >
           "Ansible is out of date. Need version >=2.11"
+    - name: Verify all cluster nodes have unique hostnames
+      ansible.builtin.assert:
+        that: (cluster_hostnames | unique | length) == (cluster_hostnames | length)
+        msg: >-
+          k3s nodes must have unique hostnames. Found a duplicate in:
+          {{ cluster_hostnames | unique }}. Each node registers in the cluster
+          keyed by its hostname, so matching hostnames prevent nodes from joining.
+      vars:
+        cluster_hostnames: >-
+          {{
+            groups['k3s_cluster']
+            | map('extract', hostvars, 'ansible_hostname')
+            | list
+          }}
+      run_once: true
+      when: "'k3s_cluster' in groups"
 
 - name: Prepare k3s nodes
   hosts: k3s_cluster

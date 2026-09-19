@@ -3,7 +3,7 @@ collections:
   - name: community.general
   - name: ansible.posix
   - name: kubernetes.core
-  - name: https://github.com/panoptikoe/k3s-ansible.git
+  - name: https://github.com/timothystewart6/k3s-ansible.git
     type: git
     version: master
 
