@@ -35,7 +35,7 @@ tags:
 - [x] Vaultwarden
   - [x] Decide on advanced setup (2FA)
   - [x] Set up email notification
-  - [ ] Yubikey setup
+  - [x] Yubikey setup
 - [x] Upgrade Longhorn
 - [x] Configure NAS (TrueNAS)
   - Look into Terraform for this ([provider](https://registry.terraform.io/providers/PjSalty/truenas/latest/docs/guides/kubernetes-storage))
@@ -63,4 +63,8 @@ tags:
 - [x] Blog
   - [ ] Configure replica on separate machine (`puppydm01`) using cloned cloudflared (so that it is seen as the same exact tunnel)
     - Also set up Service and ServiceMonitor to scrape it
-- [ ] Setup for keeping apps/charts up to date
+- [ ] Auto upgrades (in the form of automated PR opened or unattended upgrades)
+  - System upgrades (Kubernetes):
+    - [ ] Looking at the ansible roles used (from techno tim), the readme explicitly says that they should not be used to perform in-place upgrades.
+  - App upgrades:
+    - [ ] Try out Renovate maybe
