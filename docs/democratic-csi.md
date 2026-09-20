@@ -77,6 +77,14 @@ helm show values democratic-csi/democratic-csi
 
 #### NFS
 
+> [!NOTE]
+>
+> The original deployment of democratic-csi was manual (`helm install ...`), but now I am using [ArgoCD](./argocd.md) to manage it.
+> This section is only here for historical reason, but it is now outdated.
+> See the [Application manifest](../kubernetes/argocd-apps/democratic-csi.yaml) for reference.
+>
+> Also keep in mind that I am using [Sealed Secrets](./sealed-secrets.md) to track secrets in Git (including API key secret).
+
 For NFS, we need:
 
 - Secret containing the "driver config", referencing:
@@ -91,7 +99,7 @@ For NFS, we need:
     - `democratic-nfs-retain`, with reclaim policy `Retain`
   - **Note**: for now, we disable snapshots, as the cluster does not support them yet
 
-Then, deploy democratic-csi with the name `nfs`:
+Then, deploy democratic-csi with the name `nfs` (as we are only using the NFS driver):
 
 ```bash
 kubectl apply -f nfs/driver-config-secret.yaml
