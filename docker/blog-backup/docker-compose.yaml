@@ -7,7 +7,7 @@ services:
       - dmhosted-blog
     restart: unless-stopped
     healthcheck:
-      start_period: 20s
+      start_period: 1m
       interval: 20s
       timeout: 5s
       retries: 3
