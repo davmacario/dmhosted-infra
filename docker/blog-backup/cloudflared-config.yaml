@@ -1,0 +1,12 @@
+tunnel: k3s-traefik
+credentials-file: /etc/cloudflared/creds/credentials.json
+warp-routing:
+  enabled: false
+metrics: 0.0.0.0:2000
+no-autoupdate: true
+ingress:
+  - hostname: "blog.dmhosted.com"
+    service: "http://blog:8080"
+  - hostname: "whoami.dmhosted.com"
+    service: "http://whoami:80"
+  - service: http_status:404
