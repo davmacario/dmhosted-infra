@@ -10,6 +10,11 @@ tags:
 
 # Upgrading K3s Version (Using Ansible)
 
+> [!WARNING]
+>
+> As of the latest version (2026-09-20) of `k3s-ansible` (by TechnoTim), the [readme](https://github.com/timothystewart6/k3s-ansible#-upgrading-an-existing-cluster) discourages using these roles to perform in-place upgrades.
+> Refer to [Automated Upgrades](./automated-upgrades.md) for the actual method, what follows here is outdated.
+
 **Issue**: the 'k3s-ansible' repo by TechnoTim has not been updated in a while, and attempting to upgrade from k3s 1.33 is not working.
 Luckily, the community came to the rescue, and [this fork](https://github.com/panoptikoe/k3s-ansible) saved the day.
 

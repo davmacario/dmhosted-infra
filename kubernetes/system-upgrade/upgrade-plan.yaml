@@ -16,7 +16,7 @@ spec:
   serviceAccountName: system-upgrade
   upgrade:
     image: ghcr.io/k3s-io/k3s-upgrade
-  channel: https://update.k3s.io/v1-release/channels/v1.35
+  channel: https://update.k3s.io/v1-release/channels/v1.36
   # version: 1.33.8+k3s3
 ---
 # Agent plan
@@ -40,5 +40,5 @@ spec:
   serviceAccountName: system-upgrade
   upgrade:
     image: ghcr.io/k3s-io/k3s-upgrade
-  channel: https://update.k3s.io/v1-release/channels/v1.35
+  channel: https://update.k3s.io/v1-release/channels/v1.36
   # version: 1.33.8+k3s3
