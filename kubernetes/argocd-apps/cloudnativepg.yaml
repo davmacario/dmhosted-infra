@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloudnativepg
+  namespace: argocd
+  labels:
+    name: cloudnativepg
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/davmacario/dmhosted-infra
+    targetRevision: main
+    # kustomization.yaml pulls the pinned upstream operator and
+    # barman-cloud plugin manifests
+    path: kubernetes/cloudnativepg
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cnpg-system
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false
+      # Mandatory: the clusters.postgresql.cnpg.io CRD is ~658 KiB, far beyond
+      # the 262 KiB limit for the client-side last-applied-configuration
+      # annotation. This also matches the original `kubectl apply --server-side`.
+      - ServerSideApply=true

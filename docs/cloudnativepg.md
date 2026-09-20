@@ -29,13 +29,30 @@ The basic example is using Storage Classes, such as Longhorn, which ensure data 
 
 ## Target setup - integration with existing cluster
 
-> TODO
->
-> Elaborate on:
->
-> - Longhorn compatibility (to be avoided, prefer local disk and let CNPG handle resilience and replication)
+The goal of CNPG is to provide a Kubernetes-native way to manage PostgreSQL databases at scale.
+This will not only take care of defining the DB pods themselves, but also handle things like automatic replication (i.e., having multiple copies of the same DB distributed over different pods), backups to remote storage, and initialization.
+Having multiple copies of the same DB also allows to define readonly DB endpoints, which some applications can use to avoid saturating the "main" readwrite endpoint (there can only be 1 readwrite-able pod).
+
+CNPG defines the `Cluster` CRD, which abstracts all the complexity of running multiple copies and keeping them in sync.
+It also automatically creates `Service` resources for interacting with the DB.
+
+### Storage classes
+
+How does CNPG work with Longhorn?
+
+Note that CNPG manages DB replication itself.
+This means that it would be overkill to use replicated longhorn volumes for DB data, as you would have several copies of the same data.
+
+For this reason, I am using a `StorageClass` based on Longhorn, but with only 1 replica per volume (called `longhorn-singlecopy`) - see [custom storageclasses](../kubernetes/longhorn/extra-storageclasses.yaml).
+
+An alternative would be to just use `local-path`, but that would make the volumes less visible (they would not be factored into the storage used by Longhorn).
 
 ## Installation
+
+> [!NOTE]
+>
+> CloudNativePG is now managed via [ArgoCD](./argocd.md) (see [Application resource](../kubernetes/argocd-apps/cloudnativepg.yaml)).
+> The remote manifests are pulled via Kustomize - see [Kustomization](../kubernetes/cloudnativepg/kustomization.yaml).
 
 Using the manifest.
 
@@ -291,13 +308,16 @@ This plugin separates the responsibilities between DB cluster administration and
 [Installation steps](https://cloudnative-pg.io/plugin-barman-cloud/docs/installation/).
 Resources will be created in the `cnpg-system` namespace.
 
+> [!NOTE]
+>
+> The Barman plugin is now managed by [ArgoCD](./argocd.md).
+
 Summed up:
 
 ```bash
 # Create CRDs + set up required resources
 kubectl apply -f \
         https://github.com/cloudnative-pg/plugin-barman-cloud/releases/download/v0.12.0/manifest.yaml
-
 # Check that deployment is running
 kubectl rollout status deployment \
   -n cnpg-system barman-cloud

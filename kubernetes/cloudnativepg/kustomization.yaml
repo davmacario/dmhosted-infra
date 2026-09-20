@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# CNPG is installed via remote manifests, so we use a kustomization to reference
+# them; also barman is installed in the same way.
+# Both manifests include the `cnpg-system` namespace.
+resources:
+  # CloudNativePG operator
+  - https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.29/releases/cnpg-1.29.1.yaml
+  # Barman Cloud CNPG-I plugin
+  - https://github.com/cloudnative-pg/plugin-barman-cloud/releases/download/v0.12.0/manifest.yaml
