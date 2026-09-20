@@ -368,6 +368,10 @@ Additionally, it is very convenient, as it takes care of rotation as well.
 
 ### Installing cert-manager
 
+> [!NOTE]
+>
+> As of 2026-09-20, cert-manager is now managed via ArgoCD.
+
 We will follow the [official installation steps](https://cert-manager.io/docs/installation/), and we will use Helm.
 
 Installing from chart (with custom values) - version 1.19.2:
