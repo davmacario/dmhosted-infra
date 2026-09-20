@@ -27,10 +27,23 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: notes-rag
-          image: ghcr.io/davmacario/notes-rag:v1.1.2
+          image: ghcr.io/davmacario/notes-rag:v1.2.0
           command:
             - notes-rag
             - --rebuild-on-start
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 5
+            failureThreshold: 2
+            initialDelaySeconds: 30
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 20
+            failureThreshold: 3
           env:
             - name: REBUILD_CRON
               value: "0 */6 * * *"
