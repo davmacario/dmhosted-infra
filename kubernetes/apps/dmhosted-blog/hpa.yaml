@@ -1,0 +1,39 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: autoscale-cpu
+  namespace: dmhosted-blog
+spec:
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+    # Scale up when CPU or memory go above 75% utilization
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 75
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 75
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: dmhosted-blog
+  behavior:
+    scaleUp:
+      # Allow up to 5 pods to be created over 30s
+      policies:
+        - type: Pods
+          periodSeconds: 30
+          value: 5
+    # Allow deleting up to 50% of pods over 30s
+    scaleDown:
+      policies:
+        - type: Percent
+          periodSeconds: 30
+          value: 50
