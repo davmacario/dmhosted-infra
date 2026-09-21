@@ -1,0 +1,39 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: autoscale-cloudflared
+  namespace: cloudflare
+  labels:
+    app: cloudflared
+    tunnel-name: k3s-traefik
+spec:
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 75
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 75
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: dmhosted-blog
+  behavior:
+    scaleUp:
+      policies:
+        - type: Pods
+          periodSeconds: 30
+          value: 5
+    scaleDown:
+      policies:
+        - type: Percent
+          periodSeconds: 30
+          value: 50
