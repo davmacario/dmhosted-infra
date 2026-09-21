@@ -49,12 +49,14 @@ spec:
               port: http
             periodSeconds: 5
             failureThreshold: 2
+            initialDelaySeconds: 10
           livenessProbe:
             httpGet:
               path: /healthz
               port: http
             periodSeconds: 20
             failureThreshold: 3
+            initialDelaySeconds: 20
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
