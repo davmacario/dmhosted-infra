@@ -69,10 +69,10 @@ spec:
           resources:
             limits:
               cpu: 50m
-              memory: 32Mi
+              memory: 64Mi
             requests:
               cpu: 5m
-              memory: 16Mi
+              memory: 32Mi
           volumeMounts:
             # image points XDG_{CONFIG,DATA}_HOME at /tmp/caddy-*
             - name: tmp
