@@ -1,7 +1,7 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: autoscale-cpu
+  name: autoscale-blog
   namespace: dmhosted-blog
 spec:
   minReplicas: 1
