@@ -95,6 +95,12 @@ memberlist:
 # TODO: only allow reaching Loki from Grafana
 # networkPolicy:
 
+monitoring:
+  serviceMonitor:
+    enabled: true
+    labels:
+      release: prometheus-stack
+
 # deactivate unused components (running in Monolithic mode)
 backend:
   replicas: 0
