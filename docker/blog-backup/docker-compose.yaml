@@ -1,6 +1,6 @@
 services:
   blog:
-    image: ghcr.io/davmacario/dmhosted-blog:v1.2.0
+    image: ghcr.io/davmacario/dmhosted-blog:v1.3.0
     container_name: dmhosted-blog
     hostname: dmhosted-blog
     networks:
