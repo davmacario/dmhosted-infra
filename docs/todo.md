@@ -54,6 +54,7 @@ tags:
   - Only if democratic-CSI does not add support for new TrueNAS API
 - [x] Switch to [kubeseal](https://kubeseal.com/) for secrets management
 - [x] Set up hosted Git (Forgejo looks like the best)
+  - [ ] Configure SSH access to Forgejo (using [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/use-cases/ssh/))
 - [x] ArgoCD
   - [ ] Figure out mechanism to preview diffs from MRs - is this even a use case?
 - [ ] Configure CICD environment where to run homelab-related deployments
