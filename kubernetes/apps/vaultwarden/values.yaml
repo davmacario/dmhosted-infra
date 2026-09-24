@@ -1,6 +1,6 @@
 # Values for Helm installation of Vaultwarden
 
-replicas: 2
+replicas: 1
 
 image:
   tag: "1.37.2-alpine"
@@ -46,7 +46,8 @@ timeZone: "Europe/Amsterdam"
 service:
   type: "ClusterIP"
   annotations: {}
-  labels: {}
+  labels:
+    app: vaultwarden
   sessionAffinity: "ClientIP"
   sessionAffinityConfig:
     clientIP:
