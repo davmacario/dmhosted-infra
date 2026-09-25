@@ -15,7 +15,8 @@ spec:
   routes:
     # Only allow requesting '/' or '/api'
     - match: >-
-        Host(`whoami.dmhosted.com`) && Path(`/`)
+        Host(`whoami.dmhosted.com`)
+        && (Path(`/`) || Path(`/api`))
         && (Method(`GET`) || Method(`HEAD`))
         && !QueryRegexp(`env`, `.*`) && !QueryRegexp(`wait`, `.*`)
       kind: Rule
