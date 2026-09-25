@@ -16,11 +16,35 @@ spec:
       labels:
         app: whoami
     spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: whoami
-          image: traefik/whoami
+          image: traefik/whoami:v1.12.0
+          args:
+            - --port
+            - "8080"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          livenessProbe:
+            tcpSocket:
+              port: http
           ports:
-            - containerPort: 80
+            - name: http
+              containerPort: 8080
           resources:
             limits:
               cpu: 30m
