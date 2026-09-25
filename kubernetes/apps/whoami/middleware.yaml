@@ -2,7 +2,9 @@
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: whoami-deny-non-root
+  name: whoami-deny
   namespace: whoami
 spec:
-
+  ipAllowList:
+    sourceRange:
+      - "127.0.0.1/32" # no matches
