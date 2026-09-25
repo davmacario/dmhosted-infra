@@ -14,6 +14,7 @@ tags:
   - [x] Find nicer way to handle secrets appearing in configmap...
     - ~~No alternative found for now... Settled with not tracking configmap definition in Git~~
     - Moved to secret + sealedsecrets
+  - [ ] Consider idea of automating sealed secret creation (kustomize + makefile?); ideally, YAML files used in config are kept under version control, without secrets
 - [x] Install IT-Tools (migrate from puppy)
 - [x] Install Stirling PDF
 - [x] Install [Uptime Kuma](https://github.com/louislam/uptime-kuma)
