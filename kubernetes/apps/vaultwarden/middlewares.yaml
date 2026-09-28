@@ -11,7 +11,7 @@ spec:
     customResponseHeaders:
       X-Frame-Options: ""
 ---
-# Used to deny access to `/api` (need to kubectl port-forward)
+# Used to deny access to `/admin` (need to kubectl port-forward)
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:

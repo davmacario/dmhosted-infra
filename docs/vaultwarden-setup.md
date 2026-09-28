@@ -106,21 +106,30 @@ This defines the `vaultwarden-rwx-pvc` PVC.
 
 #### Installing the Helm chart
 
-Command (both for installation and upgrade):
+Vaultwarden is deployed via Argo CD, and it consists of the [Helm chart](https://guerzon.github.io/vaultwarden), plus some manifests to define other resources:
+
+- App secrets
+- Database (CNPG cluster)
+- IngressRoute + certificate + middlewares
+- NetworkPolicies
+- HorizontalPodAutoscaler
+
+To preview what the chart will render before syncing:
 
 ```bash
-helm upgrade --install vaultwarden vaultwarden/vaultwarden -n vaultwarden --values ./values.yaml
+helm template vaultwarden vaultwarden/vaultwarden --version <targetRevision> \
+  -n vaultwarden --values ./values.yaml
 ```
 
-#### Setting up HTTPS access (IngressRoute)
+## Configuration - admin console
 
-See [manifest](../kubernetes/apps/vaultwarden/ingressroute.yaml) for the `Certificate` + `IngressRoute` used to expose Vaultwarden.
+`/admin` is **blocked on the public route** (see [Hardening](#hardening)), so reach it through a port-forward instead:
 
-## Configuration
+```bash
+kubectl -n vaultwarden port-forward svc/vaultwarden 8080:80
+```
 
-Navigate to `https://<your-vaultwarden-domain>/admin` to log into the admin console.
-
-Then, provide your admin token created [before](#admin-token).
+Then navigate to `http://localhost:8080/admin` and provide your admin token created [before](#admin-token).
 
 ### SMTP
 
@@ -128,29 +137,77 @@ See [SMTP Configuration](./smtp-configuration.md)
 
 ### YubiKey configuration
 
-> This assumes a fresh new YubiKey (in my case, series 5C NFC).
+> Not that interesting - using it as MFA device with WebAuthn.
 
-#### Setting up YubiKey (first time usage)
+---
 
-We need the YubiKey Manager CLI, that can be installed with `pip` (or `pipx`):
+## Hardening
 
-```bash
-pipx install yubikey-manager
+Vaultwarden is the highest-value workload in the cluster, so it important it gets locked down properly.
+
+### Pod and container
+
+Set in [`values.yaml`](../kubernetes/apps/vaultwarden/values.yaml):
+
+```yaml
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+securityContext:
+  allowPrivilegeEscalation: false
+  privileged: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# Avoids issues with readOnlyRootFilesystem
+extraVolumes:
+  - name: tmp
+    emptyDir:
+      medium: Memory
+      sizeLimit: 64Mi
+extraVolumeMounts:
+  - name: tmp
+    mountPath: /tmp
 ```
 
-Then, verify installation with:
+### Network
 
-```bash
-ykman --version
-```
+[`networkpolicy.yaml`](../kubernetes/apps/vaultwarden/networkpolicy.yaml) default-denies the **app pods only** and allows:
 
-Sample output:
+- ingress from primary Traefik
+- ingress from the node subnet (kubelet probes)
+- egress to DNS
+- egress to the CNPG instance pods on 5432
+- egress to `:587` for the Brevo SMTP relay
+- egress to `:443`/`:80` for favicon fetching.
 
-```text
-YubiKey Manager (ykman) version: 5.9.2
-```
+Every public-internet egress rule excludes the RFC1918 / tailnet / link-local ranges.
+With `iconService: internal` Vaultwarden fetches favicons itself, which means it will HTTP-GET any hostname a user stores a login for - an SSRF primitive.
+The exclusions are defence in depth behind the app's own `ICON_BLACKLIST_NON_GLOBAL_IPS=true`.
 
-Next, we need to
+> Pod selectors use `app.kubernetes.io/{component,name,instance}: vaultwarden`.
+> **Never** select on `app: vaultwarden` - that label is on the _Service_ and, via `inheritedMetadata` in `database.yaml`, on the _CNPG pods_.
+> Using it would deny the database instead of the app.
+
+The CNPG cluster itself is **not** yet covered by a policy.
+Doing so needs rules for replication (5432/8000), the instance manager's kube-apiserver access, the `cnpg-system` operator, and barman-cloud S3 egress to the NAS - a separate change.
+
+### Edge
+
+`/admin` is denied on the public IngressRoute by the `vaultwarden-deny` middleware in [`middlewares.yaml`](../kubernetes/apps/vaultwarden/middlewares.yaml) (an `ipAllowList` of `127.0.0.1/32`, which the cloudflared source address can never match).
+
+### Application settings
+
+- `ipHeader: CF-Connecting-IP`: every request arrives via the Cloudflare tunnel, so Traefik's `X-Real-IP` (the chart default) is always the cloudflared pod's address.
+  That would make `adminRateLimitSeconds` / `adminRateLimitMaxBurst` and the login limiter key on a single value for the entire internet.
+  Note a LAN client could forge this header, since the Traefik LoadBalancer is reachable locally; public traffic cannot.
+- `orgCreationUsers: none`, `requireDeviceEmail: true`, `showPassHint: false`.
+- `orgEventsEnabled: true` + `eventsDayRetain: 90` - audit log. `eventsDayRetain` is also what enables the `eventCleanupSched` job; without it events are kept forever.
 
 ---
 
