@@ -35,7 +35,7 @@ spec:
             - name: SPARKY_FITNESS_EXTRA_TRUSTED_ORIGINS
               value: https://sparkyfitness.local.dmhosted.com # Alt origins, csv
             - name: SPARKY_FITNESS_SERVER_HOST
-              value: sparkyfitness-backend
+              value: sparkyfitness-backend.sparkyfitness.svc.cluster.local # due to nginx
             - name: SPARKY_FITNESS_SERVER_PORT
               value: "3010"
             - name: TZ
