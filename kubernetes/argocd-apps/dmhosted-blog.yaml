@@ -12,6 +12,3 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: dmhosted-blog
-  syncPolicy:
-    syncOptions:
-      - CreateNamespace=true
