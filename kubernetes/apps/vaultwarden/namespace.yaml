@@ -2,3 +2,11 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: vaultwarden
+  labels:
+    # Pod Security Admission. `baseline` is what the current pod spec satisfies;
+    # `restricted` is only audited/warned for now because the app still runs as
+    # root in-container (the RWX PVC is root-owned - see docs/vaultwarden-setup.md).
+    # Promote `enforce` to `restricted` once that is resolved.
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted

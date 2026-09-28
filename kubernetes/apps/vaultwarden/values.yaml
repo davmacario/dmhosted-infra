@@ -3,7 +3,7 @@
 replicas: 1
 
 image:
-  tag: "1.37.2-alpine"
+  tag: "1.37.3-alpine"
 
 resources:
   limits:
@@ -24,7 +24,6 @@ storage:
   existingVolumeClaim:
     claimName: "vaultwarden-rwx-pvc"
     dataPath: "/data"
-    attachmentsPath: "/attachments"
 
 database:
   type: "postgresql"
@@ -62,6 +61,25 @@ signupsVerify: "true"
 invitationsAllowed: true
 invitationOrgName: "DMHosted's Vaultwarden"
 invitationExpirationHours: "24"
+# Nobody can create new organizations from the web vault.
+orgCreationUsers: "none"
+# Mail the user whenever a new device logs in.
+requireDeviceEmail: "true"
+# Explicit (already the default): never render a password hint unauthenticated.
+showPassHint: "false"
+# Audit log for organization activity. `eventsDayRetain` is also what enables
+# the `eventCleanupSched` job - without it events are kept forever.
+orgEventsEnabled: "true"
+eventsDayRetain: "90"
+
+# Requests arrive through the Cloudflare tunnel, so Traefik's `X-Real-IP` (the
+# chart default) is always the cloudflared pod's address - which would make the
+# admin and login rate limiters key on a single value for every client on the
+# internet. `CF-Connecting-IP` is stamped by the Cloudflare edge and is the real
+# client address.
+# NOTE: the Traefik LoadBalancer is reachable on the LAN, so a LAN client could
+# forge this header. Public traffic cannot - Cloudflare overwrites it.
+ipHeader: "CF-Connecting-IP"
 
 smtp:
   existingSecret: vaultwarden-smtp
@@ -78,3 +96,38 @@ smtp:
   acceptInvalidHostnames: "false"
   acceptInvalidCerts: "false"
   debug: false
+
+# ==============================================================================
+# Hardening
+# ==============================================================================
+# The chart passes both of these through `toYaml` unfiltered (templates/
+# _podSpec.tpl), so any valid field works - including `seccompProfile`, which
+# has no dedicated value.
+
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  privileged: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# Required by `readOnlyRootFilesystem`. Vaultwarden stages uploads under
+# DATA_FOLDER/tmp (the PVC), not /tmp, but the TLS/DNS machinery and the image's
+# healthcheck script can touch /tmp - cheap insurance against a crash loop.
+extraVolumes:
+  - name: tmp
+    emptyDir:
+      medium: Memory
+      sizeLimit: 64Mi
+
+extraVolumeMounts:
+  - name: tmp
+    mountPath: /tmp
+
+# Don't inject every Service's host/port into the container's environment.
+enableServiceLinks: false

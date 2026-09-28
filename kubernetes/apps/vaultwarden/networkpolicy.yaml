@@ -1,0 +1,120 @@
+---
+# Default deny for the vaultwarden app pods only
+# NOTE: not needed technically, as defining the following policies already
+# default denies routes not explicitly allowed, but this is good practice
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-vaultwarden-app
+  namespace: vaultwarden
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: vaultwarden
+      app.kubernetes.io/name: vaultwarden
+      app.kubernetes.io/instance: vaultwarden
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# Cluster DNS
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-vaultwarden-app
+  namespace: vaultwarden
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: vaultwarden
+      app.kubernetes.io/name: vaultwarden
+      app.kubernetes.io/instance: vaultwarden
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-vaultwarden
+  namespace: vaultwarden
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: vaultwarden
+      app.kubernetes.io/name: vaultwarden
+      app.kubernetes.io/instance: vaultwarden
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Traffic to the app only arrives from
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik
+          podSelector:
+            matchLabels: # see kubernetes/traefik/values.yaml
+              app: traefik
+              instance: primary
+      ports:
+        - port: 8080
+          protocol: TCP
+    # Allow liveness/readiness probes
+    - from:
+        - ipBlock:
+            cidr: 192.168.0.0/16
+        - ipBlock:
+            cidr: 100.64.0.0/10 # tailscale (not sure if needed)
+      ports:
+        - port: 8080
+          protocol: TCP
+  egress:
+    # Allow reaching DB (CNPG)
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: vaultwarden-db
+      ports:
+        - port: 5432
+          protocol: TCP
+    # SMTP is over the public internet. Exclude reaching private subnets
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 192.168.0.0/16
+              - 172.16.0.0/12
+              - 100.64.0.0/10
+              - 169.254.0.0/16
+      ports:
+        - port: 587
+          protocol: TCP
+    # Used to fetch favicons over public internet
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 192.168.0.0/16
+              - 172.16.0.0/12
+              - 100.64.0.0/10
+              - 169.254.0.0/16
+      ports:
+        - port: 443
+          protocol: TCP
+        - port: 80
+          protocol: TCP

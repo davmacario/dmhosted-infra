@@ -25,6 +25,15 @@ spec:
   entryPoints:
     - websecure
   routes:
+    # Block /admin on the public route entirely - see middlewares.yaml
+    - match: Host(`vaultwarden.dmhosted.com`) && PathPrefix(`/admin`)
+      kind: Rule
+      priority: 200
+      middlewares:
+        - name: vaultwarden-deny
+      services: # not actually used
+        - name: vaultwarden
+          port: 80
     # NOTE: required to make 2FA work properly - unset header `X-Frame-Options`
     # Overrides default headers
     - match: Host(`vaultwarden.dmhosted.com`) && PathRegexp(`^/[a-z0-9-]*connector\.html%`)
