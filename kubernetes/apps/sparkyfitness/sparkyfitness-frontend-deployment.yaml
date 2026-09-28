@@ -20,10 +20,6 @@ spec:
         app: sparkyfitness-frontend
     spec:
       automountServiceAccountToken: false
-      dnsPolicy: ClusterFirst
-      dnsConfig:
-        searches:
-          - sparkyfitness.svc.cluster.local # Allows to refer to the backend as `sparkyfitness-backend`
       containers:
         - name: sparkyfitness-backend
           image: codewithcj/sparkyfitness:v1.7.3
