@@ -78,3 +78,4 @@ tags:
     - [ ] Try out Renovate maybe
 - [ ] Repurpose Nginx instances on beta2 / raspberry to use `internal.dmhosted.com`
 - [ ] Set up CI/CD pipelines in repo
+- [ ] Mirror repo on Forgejo
