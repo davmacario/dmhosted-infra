@@ -1,0 +1,115 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: forgejo-app-default-deny
+  namespace: forgejo
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: forgejo
+      app.kubernetes.io/name: forgejo
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# Cluster DNS
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: forgejo-app-allow-dns
+  namespace: forgejo
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: forgejo
+      app.kubernetes.io/name: forgejo
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: forgejo-app-allow
+  namespace: forgejo
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: forgejo
+      app.kubernetes.io/name: forgejo
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from: # Traffic only comes in through Traefik
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik
+          podSelector:
+            matchLabels:
+              app: traefik
+              instance: primary
+      ports:
+        - port: 3000
+          protocol: TCP
+    - from: # Liveness/readiness probes
+        - ipBlock:
+            cidr: 192.168.0.0/16
+        - ipBlock:
+            cidr: 100.64.0.0/10 # tailscale (not sure if needed)
+      ports:
+        - port: 3000
+          protocol: TCP
+    - from: # Servicemonitor (prometheus)
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - port: 3000
+          protocol: TCP
+  egress:
+    - to: # CNPG
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: forgejo-db
+      ports:
+        - port: 5432
+          protocol: TCP
+    - to: # Public internet for SMTP + other operations (e.g., repo mirrors)
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 192.168.0.0/16
+              - 172.16.0.0/12
+              - 100.64.0.0/10
+              - 169.254.0.0/16
+      ports:
+        - port: 80
+          protocol: TCP
+        - port: 443
+          protocol: TCP
+        - port: 587
+          protocol: TCP
+    - to: # RustFS
+        - ipBlock:
+            cidr: 100.84.247.181/32
+      ports:
+        - port: 443
+          protocol: TCP
