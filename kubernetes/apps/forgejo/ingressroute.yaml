@@ -25,6 +25,16 @@ spec:
   entryPoints:
     - websecure
   routes:
+    # NOTE: metrics can only be scraped from ServiceMonitor (point at
+    # forgejo-http svc)
+    - match: Host(`forgejo.dmhosted.com`) && PathPrefix(`/metrics`)
+      kind: Rule
+      priority: 200
+      middlewares:
+        - name: forgejo-deny
+      services: # not used
+        - name: forgejo-http
+          port: 3000
     - match: Host(`forgejo.dmhosted.com`)
       kind: Rule
       services:

@@ -4,6 +4,27 @@ image:
   registry: code.forgejo.org
   repository: forgejo/forgejo
   tag: 16.0.5
+  rootless: true
+
+podSecurityContext:
+  fsGroup: 1000
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
+  privileged: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+
+serviceAccount:
+  create: true
+  automountServiceAccountToken: false
 
 strategy:
   type: Recreate
@@ -31,9 +52,9 @@ route:
 resources:
   limits:
     cpu: '2'
-    memory: 512Mi
+    memory: 1024Mi
   requests:
-    cpu: 500m
+    cpu: 300m
     memory: 128Mi
 
 deployment:
@@ -69,7 +90,7 @@ gitea:
     RUN_MODE: prod
     repository:
       SCRIPT_TYPE: bash
-      DEFAULT_PRIVATE: latest
+      DEFAULT_PRIVATE: private
       MAX_CREATION_LIMIT: 100
       DEFAULT_BRANCH: main
       ALLOW_FORK_WITHOUT_MAXIMUM_LIMIT: false
@@ -93,7 +114,7 @@ gitea:
       SEND_NOTIFICATION_EMAIL_ON_NEW_USER: true
     security:
       INSTALL_LOCK: true
-      GLOBAL_TWO_FACTOR_REQUIREMENT: none # TODO: enable and set to 'all'
+      GLOBAL_TWO_FACTOR_REQUIREMENT: all
       PASSWORD_COMPLEXITY: lower,upper,digit,spec
     service:
       DISABLE_REGISTRATION: true # Only admins can create new users

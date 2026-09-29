@@ -61,3 +61,21 @@ Needed to configure some of the required secrets:
 - `INTERNAL_TOKEN`
 - `JWT_SECRET`
 - `LFS_JWT_SECRET`
+
+## Tightening security
+
+Forgejo is exposed publicly (via Cloudflare tunnel), so special attention has to be paid on security.
+
+Starting point:
+
+```bash
+kubectl label --dry-run=server --overwrite ns forgejo pod-security.kubernetes.io/enforce=restricted
+```
+
+output:
+
+```text
+Warning: existing pods in namespace "forgejo" violate the new PodSecurity enforce level "restricted:latest"
+Warning: forgejo-86cbdd9b48-zcw4k: allowPrivilegeEscalation != false, unrestricted capabilities, runAsNonRoot != true, seccompProfile
+namespace/forgejo labeled (server dry run)
+```
