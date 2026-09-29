@@ -83,6 +83,16 @@ spec:
       ports:
         - port: 3000
           protocol: TCP
+    - from: # Homepage
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: homepage
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: homepage
+      ports:
+        - port: 3000
+          protocol: TCP
   egress:
     - to: # CNPG
         - podSelector:
