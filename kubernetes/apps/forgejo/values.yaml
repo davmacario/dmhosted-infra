@@ -81,7 +81,7 @@ gitea:
     enabled: true
     serviceMonitor:
       enabled: true
-      namespace: monitoring
+      namespace: forgejo
       additionalLabels:
         release: prometheus-stack # enables auto discovery
   # Application configuration
