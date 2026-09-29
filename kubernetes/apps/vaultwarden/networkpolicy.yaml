@@ -118,3 +118,10 @@ spec:
           protocol: TCP
         - port: 80
           protocol: TCP
+    # Fetch favicons of internal services (managed by me)
+    - to:
+        - ipBlock:
+            cidr: 100.84.247.181/32
+      ports:
+        - port: 443
+          protocol: TCP

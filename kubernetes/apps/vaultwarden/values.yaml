@@ -119,3 +119,7 @@ extraVolumeMounts:
 
 # Don't inject every Service's host/port into the container's environment.
 enableServiceLinks: false
+
+# Allow fetching favicons from internal services.
+# NOTE: see networkpolicy.yaml for security enforcement
+iconBlacklistNonGlobalIps: "false"
