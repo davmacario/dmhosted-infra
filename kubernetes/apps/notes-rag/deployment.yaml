@@ -27,7 +27,7 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: notes-rag
-          image: ghcr.io/davmacario/notes-rag:v1.2.1
+          image: ghcr.io/davmacario/notes-rag:v1.2.2
           command:
             - notes-rag
             - --rebuild-on-start
@@ -70,7 +70,7 @@ spec:
               name: http
           resources:
             requests:
-              memory: 256Mi
+              memory: 768Mi
             limits:
               memory: 1024Mi # Peak at rebuild
           volumeMounts:
