@@ -117,9 +117,20 @@ spec:
           protocol: TCP
         - port: 587
           protocol: TCP
-    - to: # RustFS
+    - to: # RustFS (IP)
         - ipBlock:
             cidr: 100.84.247.181/32
+      ports:
+        - port: 443
+          protocol: TCP
+    - to: # RustFS (via traefik-tailscale)
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik-tailscale
+          podSelector:
+            matchLabels:
+              app: traefik
+              instance: tailscale
       ports:
         - port: 443
           protocol: TCP
