@@ -118,10 +118,21 @@ spec:
           protocol: TCP
         - port: 80
           protocol: TCP
-    # Fetch favicons of internal services (managed by me)
+    # Fetch favicons of internal services
     - to:
         - ipBlock:
             cidr: 100.84.247.181/32
+      ports:
+        - port: 443
+          protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik-tailscale
+          podSelector:
+            matchLabels: # from kubernetes/traefik-tailscale/values.yaml
+              app: traefik
+              instance: tailscale
       ports:
         - port: 443
           protocol: TCP
