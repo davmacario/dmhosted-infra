@@ -79,3 +79,10 @@ Warning: existing pods in namespace "forgejo" violate the new PodSecurity enforc
 Warning: forgejo-86cbdd9b48-zcw4k: allowPrivilegeEscalation != false, unrestricted capabilities, runAsNonRoot != true, seccompProfile
 namespace/forgejo labeled (server dry run)
 ```
+
+Fixes implemented:
+
+- Tightened container security - see [security-hardening.md](./security-hardening.md)
+  - Via [Helm values](../kubernetes/apps/forgejo/values.yaml)
+- Added Network Policies only allowing specific traffic to/from pod - see [Forgejo Network Policies](../kubernetes/apps/forgejo/networkpolicies.yaml)
+  - Not done for DB, but that is acceptable, as Forgejo pod is the only one accessed.
