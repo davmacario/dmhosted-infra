@@ -35,8 +35,8 @@ spec:
             httpGet:
               path: /health
               port: http
-            periodSeconds: 5
-            failureThreshold: 2
+            periodSeconds: 20
+            failureThreshold: 3
             initialDelaySeconds: 30
           livenessProbe:
             httpGet:
@@ -44,6 +44,7 @@ spec:
               port: http
             periodSeconds: 20
             failureThreshold: 3
+            initialDelaySeconds: 30
           env:
             - name: REBUILD_CRON
               value: "0 */6 * * *"
