@@ -23,6 +23,8 @@ prometheusOperator:
         memory: 100Mi
 
   admissionWebhooks:
+    certManager:
+      enabled: true
     deployment:
       resources:
         limits:
