@@ -1,7 +1,9 @@
 podEnv: [] # name + value format
 
 image:
-  tag: "2.5.0"
+  tag: "2.5.5"
+
+useDeploy: true
 
 service:
   type: ClusterIP
@@ -10,6 +12,7 @@ service:
 volume:
   enabled: true
   accessMode: ReadWriteOnce
+  storageClassName: longhorn
   size: 4Gi
 
 strategy:
@@ -22,3 +25,10 @@ dnsConfig:
   options:
     - name: ndots
       value: "3"
+
+serviceMonitor:
+  enabled: true
+  interval: 60s
+  scrapeTimeout: 10s
+  selector:
+    release: prometheus-stack
