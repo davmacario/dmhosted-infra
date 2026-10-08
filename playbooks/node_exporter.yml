@@ -1,0 +1,49 @@
+---
+# Deploy the node-exporter Docker Compose stack (docker/node-exporter/) on the target hosts.
+# Requirements on the hosts: git, docker (with compose plugin, user in the docker group), tailscale.
+#
+# Usage:
+#   ansible-playbook playbooks/node_exporter.yml
+#   ansible-playbook playbooks/node_exporter.yml -e target_hosts=rpi
+- name: Deploy node-exporter
+  hosts: "{{ target_hosts | default('torino') }}"
+  gather_facts: true
+
+  vars:
+    repo_url: https://github.com/davmacario/dmhosted-infra.git
+    repo_version: main
+    github_clones: "{{ ansible_facts['env'].HOME }}/github"
+    repo_dest: "{{ github_clones }}/dmhosted-infra"
+    docker_dir: "{{ ansible_facts['env'].HOME }}/docker"
+
+  tasks:
+    - name: Clone / update the infra repository
+      ansible.builtin.git:
+        repo: "{{ repo_url }}"
+        dest: "{{ repo_dest }}"
+        version: "{{ repo_version }}"
+        update: true
+
+    - name: Ensure ~/docker is a directory
+      ansible.builtin.file:
+        path: "{{ docker_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Symlink node-exporter stack into ~/docker
+      ansible.builtin.file:
+        src: "{{ repo_dest }}/docker/node-exporter"
+        dest: "{{ docker_dir }}/node-exporter"
+        state: link
+
+    - name: Start node-exporter stack
+      ansible.builtin.command:
+        cmd: "{{ docker_dir }}/node-exporter/start.sh"
+      register: node_exporter_start
+      # `docker compose` reports progress on stderr
+      changed_when: >-
+        node_exporter_start.stderr is search('Created|Recreated|Started')
+
+    - name: Show node-exporter endpoint
+      ansible.builtin.debug:
+        msg: "{{ node_exporter_start.stdout_lines | last }}"

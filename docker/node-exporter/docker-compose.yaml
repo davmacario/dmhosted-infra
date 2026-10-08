@@ -1,0 +1,19 @@
+services:
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:v1.12.1
+    container_name: node-exporter
+    restart: unless-stopped
+    network_mode: host
+    pid: host
+    command:
+      - --path.rootfs=/host
+      - --web.listen-address=${TAILSCALE_IP:?TAILSCALE_IP must be set, use ./start.sh}:9100
+    volumes:
+      - "/:/host:ro,rslave"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 64m
+    cpus: 0.1
