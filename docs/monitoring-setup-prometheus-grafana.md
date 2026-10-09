@@ -141,6 +141,60 @@ metrics:
       release: prometheus-stack # Should match your Prometheus' matchLabels
 ```
 
+## Scraping metrics from outside the cluster
+
+The `ScrapeConfig` CRD can be used to instruct Prometheus to scrape targets that are not necessarily inside the cluster (or that are not possible with `ServiceMonitor`, `Probe` or `PodMonitor` resources).
+Specifically, I set up a `ScrapeConfig` to pull metrics from hosts in my Tailnet (outside of my cluster).
+
+This also requires making the metrics available for scraping.
+This can be achieved by running the Prometheus `node-exporter` app on the target hosts.
+See [Docker Compose](../docker/node-exporter/docker-compose.yaml).
+
+What this achieves is a webserver (only exposed on the Tailscale interface) on port **9100** that exposes metrics about the host (CPU, memory, ...).
+
+> [!NOTE]
+>
+> The kube-prometheus stack already deploys the same container on cluster nodes!
+
+The `ScrapeConfig` will then look like (see [here](../kubernetes/monitoring/kube-prometheus/configuration/scrapeconfigs/external-node-exporters.yaml)):
+
+```yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: external-node-exporters
+  namespace: monitoring
+  labels:
+    release: prometheus-stack
+spec:
+  # Same job name as existing ones to automatically pick those up from Grafana
+  jobName: node-exporter
+  scrapeInterval: 30s
+  scrapeTimeout: 10s
+  staticConfigs:
+    - targets: ["100.68.161.46:9100"]
+      labels:
+        instance: puppydm01
+    - targets: ["100.103.170.65:9100"]
+      labels:
+        instance: davipi2
+    - targets: ["100.87.33.76:9100"]
+      labels:
+        instance: beta2
+    - targets: ["100.91.137.78:9100"]
+      labels:
+        instance: hw2482
+```
+
+> [!NOTE]
+>
+> The `jobName` matches the `jobLabel` of the `node-exporter` `ServiceMonitor` (from kube-prometheus stack),
+> which in turn matches the `node-exporter` `Service`'s label, i.e., `node-exporter`
+>
+> This is a convenient way to automatically have the measurements end up in the same Grafana dashboard as the cluster nodes.
+>
+> **Note** that this also will include the external hosts in the alerts defined on node-exporter metrics!
+
 ## How it works - Prometheus Operator
 
 ### Prometheus Operator

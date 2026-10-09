@@ -79,4 +79,5 @@ tags:
 - [ ] Repurpose Nginx instances on beta2 / raspberry to use `internal.dmhosted.com`
 - [ ] Set up CI/CD pipelines in repo
 - [x] Mirror repo on Forgejo
-- [ ] Set up nodemonitor on hosts outside k8s and scrape them with prometheus
+- [x] Set up nodemonitor on hosts outside k8s and scrape them with prometheus
+  - [ ] GPU metrics for hosts that support them

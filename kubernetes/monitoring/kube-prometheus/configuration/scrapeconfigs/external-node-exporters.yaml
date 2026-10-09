@@ -1,0 +1,26 @@
+# Scraping other Tailscale nodes (always on)
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: external-node-exporters
+  namespace: monitoring
+  labels:
+    release: prometheus-stack
+spec:
+  # Same job name as existing ones to automatically pick those up from Grafana
+  jobName: node-exporter
+  scrapeInterval: 30s
+  scrapeTimeout: 10s
+  staticConfigs:
+    - targets: ["100.68.161.46:9100"]
+      labels:
+        instance: puppydm01
+    - targets: ["100.103.170.65:9100"]
+      labels:
+        instance: davipi2
+    - targets: ["100.87.33.76:9100"]
+      labels:
+        instance: beta2
+    - targets: ["100.91.137.78:9100"]
+      labels:
+        instance: hw2482
