@@ -22,7 +22,7 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: sparkyfitness-backend
-          image: codewithcj/sparkyfitness_server:v1.7.3
+          image: codewithcj/sparkyfitness_server:v1.8.0
           env:
             - name: SPARKY_FITNESS_LOG_LEVEL
               value: WARN
