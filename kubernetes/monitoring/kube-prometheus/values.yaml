@@ -196,16 +196,16 @@ grafana:
     dashboardproviders.yaml:
       apiVersion: 1
       providers:
-        - name: all_hosts
+        - name: all-hosts
           orgId: 1
           folder: Hosts
           type: file
           disableDeletion: true
           editable: false
           options:
-            path: /var/lib/grafana/dashboards/all_hosts
+            path: /var/lib/grafana/dashboards/all-hosts
   dashboards:
-    all_hosts:
+    all-hosts:
       node-exporter-full:
         gnetId: 1860
         revision: 41
