@@ -26,6 +26,6 @@ spec:
     - targets: ["100.91.137.78:9100"]
       labels:
         instance: hw2482
-    - targets: ["100.92.93.57"]
+    - targets: ["100.92.93.57:9100"]
       labels:
         instance: dmacario-desktop
