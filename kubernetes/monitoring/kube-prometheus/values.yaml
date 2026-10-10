@@ -156,6 +156,39 @@ alertmanager:
           matchers: # Only forward alerts that are critical/warnings
             - severity =~ "critical|warning|error"
 
+    # NOTE: setting this replaces the chart's default list, so the first four
+    # rules are copied from default-values.yaml
+    inhibit_rules:
+      - source_matchers:
+          - 'severity = critical'
+        target_matchers:
+          - 'severity =~ warning|info'
+        equal:
+          - 'namespace'
+          - 'alertname'
+      - source_matchers:
+          - 'severity = warning'
+        target_matchers:
+          - 'severity = info'
+        equal:
+          - 'namespace'
+          - 'alertname'
+      - source_matchers:
+          - 'alertname = InfoInhibitor'
+        target_matchers:
+          - 'severity = info'
+        equal:
+          - 'namespace'
+      - target_matchers:
+          - 'alertname = InfoInhibitor'
+      # External hosts going down is reported by ExternalHostDown only
+      - source_matchers:
+          - 'alertname = ExternalHostDown'
+        target_matchers:
+          - 'alertname = TargetDown'
+        equal:
+          - 'job'
+
     templates:
       - /etc/alertmanager/configmaps/telegram-message-template/*.tmpl
 
@@ -190,8 +223,7 @@ grafana:
       jsonData:
         timeout: 60
         maxLines: 1000
-  # Dashboards for hosts outside the cluster (job="node-exporter-external"),
-  # which the built-in node-exporter dashboards don't cover
+  # Dashboards for all hosts (over tailscale, including cluster nodes)
   dashboardProviders:
     dashboardproviders.yaml:
       apiVersion: 1
