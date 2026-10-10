@@ -1,0 +1,103 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: external-nodes-rules
+  namespace: monitoring
+  labels:
+    release: prometheus-stack
+spec:
+  groups:
+    # Subset of the upstream node-exporter alerts, for the hosts scraped by
+    # scrapeconfigs/external-node-exporters.yaml
+    - name: external-nodes.rules
+      rules:
+        - alert: ExternalHostDown
+          expr: up{job="node-exporter-external"} == 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: External host {{ $labels.instance }} is unreachable.
+            description: >-
+              node-exporter on {{ $labels.instance }} has not been scraped
+              successfully for more than 5 minutes.
+        - alert: ExternalHostFilesystemAlmostFull
+          expr: |-
+            (
+              node_filesystem_avail_bytes{job="node-exporter-external",fstype!~"|tmpfs|overlay|squashfs",mountpoint!=""}
+              / node_filesystem_size_bytes{job="node-exporter-external",fstype!~"|tmpfs|overlay|squashfs",mountpoint!=""} * 100 < 10
+            and
+              node_filesystem_readonly{job="node-exporter-external",fstype!~"|tmpfs|overlay|squashfs",mountpoint!=""} == 0
+            )
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: Filesystem has less than 10% space left.
+            description: >-
+              Filesystem on {{ $labels.device }}, mounted on {{ $labels.mountpoint }},
+              at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available space left.
+        - alert: ExternalHostFilesystemAlmostFull
+          expr: |-
+            (
+              node_filesystem_avail_bytes{job="node-exporter-external",fstype!~"|tmpfs|overlay|squashfs",mountpoint!=""}
+              / node_filesystem_size_bytes{job="node-exporter-external",fstype!~"|tmpfs|overlay|squashfs",mountpoint!=""} * 100 < 5
+            and
+              node_filesystem_readonly{job="node-exporter-external",fstype!~"|tmpfs|overlay|squashfs",mountpoint!=""} == 0
+            )
+          for: 30m
+          labels:
+            severity: critical
+          annotations:
+            summary: Filesystem has less than 5% space left.
+            description: >-
+              Filesystem on {{ $labels.device }}, mounted on {{ $labels.mountpoint }},
+              at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available space left.
+        - alert: ExternalHostFilesystemFillingUp
+          expr: |-
+            (
+              node_filesystem_avail_bytes{job="node-exporter-external",fstype!~"|tmpfs|overlay|squashfs",mountpoint!=""}
+              / node_filesystem_size_bytes{job="node-exporter-external",fstype!~"|tmpfs|overlay|squashfs",mountpoint!=""} * 100 < 15
+            and
+              predict_linear(node_filesystem_avail_bytes{job="node-exporter-external",fstype!~"|tmpfs|overlay|squashfs",mountpoint!=""}[6h], 24*60*60) < 0
+            and
+              node_filesystem_readonly{job="node-exporter-external",fstype!~"|tmpfs|overlay|squashfs",mountpoint!=""} == 0
+            )
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: Filesystem is predicted to run out of space within 24 hours.
+            description: >-
+              Filesystem on {{ $labels.device }}, mounted on {{ $labels.mountpoint }},
+              at {{ $labels.instance }} has only {{ printf "%.2f" $value }}% available
+              space left and is filling up.
+        - alert: ExternalHostMemoryHigh
+          expr: |-
+            (
+              1 - node_memory_MemAvailable_bytes{job="node-exporter-external"}
+                / node_memory_MemTotal_bytes{job="node-exporter-external"}
+            ) > 0.9
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: Memory usage above 90%.
+            description: >-
+              Memory usage on {{ $labels.instance }} has been above 90% for more
+              than 15 minutes (currently {{ $value | humanizePercentage }}).
+        - alert: ExternalHostCpuHigh
+          expr: |-
+            (
+              1 - avg by (instance) (
+                rate(node_cpu_seconds_total{job="node-exporter-external",mode="idle"}[5m])
+              )
+            ) > 0.9
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: CPU usage above 90%.
+            description: >-
+              CPU usage on {{ $labels.instance }} has been above 90% for more
+              than 30 minutes (currently {{ $value | humanizePercentage }}).

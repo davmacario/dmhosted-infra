@@ -143,6 +143,15 @@ alertmanager:
         - receiver: telegram-bot
           matchers: # For testing
             - alertname = "Watchdog"
+        # Some external hosts (e.g., desktops) are regularly off: notify once
+        # per host going down (and once on recovery), never repeat
+        - receiver: telegram-bot
+          matchers:
+            - alertname = "ExternalHostDown"
+          group_by:
+            - alertname
+            - instance
+          repeat_interval: 8760h
         - receiver: telegram-bot
           matchers: # Only forward alerts that are critical/warnings
             - severity =~ "critical|warning|error"
@@ -181,6 +190,26 @@ grafana:
       jsonData:
         timeout: 60
         maxLines: 1000
+  # Dashboards for hosts outside the cluster (job="node-exporter-external"),
+  # which the built-in node-exporter dashboards don't cover
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: external
+          orgId: 1
+          folder: External hosts
+          type: file
+          disableDeletion: true
+          editable: false
+          options:
+            path: /var/lib/grafana/dashboards/external
+  dashboards:
+    external:
+      node-exporter-full:
+        gnetId: 1860
+        revision: 41
+        datasource: Prometheus
 
 # Fix for firing alerts
 kubeControllerManager:

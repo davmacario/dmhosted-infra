@@ -7,8 +7,10 @@ metadata:
   labels:
     release: prometheus-stack
 spec:
-  # Same job name as existing ones to automatically pick those up from Grafana
-  jobName: node-exporter
+  # Must differ from the in-cluster `node-exporter` job: the kube-prometheus
+  # recording rules select job="node-exporter", so sharing it would mix these
+  # hosts into the cluster-wide CPU/memory figures
+  jobName: node-exporter-external
   scrapeInterval: 30s
   scrapeTimeout: 10s
   staticConfigs:

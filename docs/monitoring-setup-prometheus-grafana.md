@@ -167,8 +167,10 @@ metadata:
   labels:
     release: prometheus-stack
 spec:
-  # Same job name as existing ones to automatically pick those up from Grafana
-  jobName: node-exporter
+  # Must differ from the in-cluster `node-exporter` job: the kube-prometheus
+  # recording rules select job="node-exporter", so sharing it would mix these
+  # hosts into the cluster-wide CPU/memory figures
+  jobName: node-exporter-external
   scrapeInterval: 30s
   scrapeTimeout: 10s
   staticConfigs:
@@ -186,14 +188,19 @@ spec:
         instance: hw2482
 ```
 
-> [!NOTE]
+> [!WARNING]
 >
-> The `jobName` matches the `jobLabel` of the `node-exporter` `ServiceMonitor` (from kube-prometheus stack),
-> which in turn matches the `node-exporter` `Service`'s label, i.e., `node-exporter`
+> Do not reuse the `node-exporter` job name for external hosts.
+> The kube-prometheus recording rules (e.g., `node:node_cpu_utilization:ratio_rate5m`, `cluster:node_cpu:ratio_rate5m`, `:node_memory_MemAvailable_bytes:sum`) select `job="node-exporter"`.
+> External targets have no `node` label, so they collapse into one extra, mostly idle "node" that drags down the CPU and memory figures in the "Kubernetes / Compute Resources / Cluster" dashboard (and the alerts built on them).
 >
-> This is a convenient way to automatically have the measurements end up in the same Grafana dashboard as the cluster nodes.
->
-> **Note** that this also will include the external hosts in the alerts defined on node-exporter metrics!
+> Adding a `cluster` label to the external targets does not work either: the hidden `$cluster` variable in the "Node Exporter / Nodes" dashboard would resolve to it and hide the cluster nodes.
+
+Because of the separate job, the built-in node-exporter dashboards and alerts don't cover the external hosts.
+Instead:
+
+- Grafana provisions the "Node Exporter Full" dashboard (ID 1860) in the "External hosts" folder (see `grafana.dashboards` in [values.yaml](../kubernetes/monitoring/kube-prometheus/values.yaml)); select the `node-exporter-external` job in it.
+- [external-nodes-prometheusrule.yaml](../kubernetes/monitoring/kube-prometheus/configuration/alerts/external-nodes-prometheusrule.yaml) defines host down, filesystem, memory and CPU alerts for the external hosts.
 
 ## How it works - Prometheus Operator
 
