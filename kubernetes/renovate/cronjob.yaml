@@ -80,7 +80,7 @@ spec:
                 name: github-app-token-script
             - name: github-app
               secret:
-                secretName: renovate-github-app
+                secretName: github-app
                 items:
                   - key: private-key
                     path: private-key.pem
