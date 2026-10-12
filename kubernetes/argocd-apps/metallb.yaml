@@ -1,0 +1,53 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metallb
+  namespace: argocd
+  labels:
+    name: metallb
+spec:
+  project: default
+  sources:
+    - repoURL: https://metallb.github.io/metallb
+      chart: metallb
+      # Chart 0.14.8 -> app v0.14.8, the version already running on the cluster
+      targetRevision: 0.14.8
+      helm:
+        releaseName: metallb
+        valueFiles:
+          - $values/kubernetes/metallb/values.yaml
+    - repoURL: https://github.com/davmacario/dmhosted-infra
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/davmacario/dmhosted-infra
+      targetRevision: main
+      path: kubernetes/metallb
+      directory:
+        recurse: true
+        exclude: values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: metallb-system
+  # The controller injects its CA into the CRD conversion webhook and the
+  # validating webhook at runtime
+  ignoreDifferences:
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      jsonPointers:
+        - /spec/conversion/webhook/clientConfig/caBundle
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      jqPathExpressions:
+        - .webhooks[].clientConfig.caBundle
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false
+      - RespectIgnoreDifferences=true
+    # The IPAddressPool/L2Advertisement go through the controller's webhook,
+    # which is unavailable until the controller is ready
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m

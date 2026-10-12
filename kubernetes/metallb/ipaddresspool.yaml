@@ -1,0 +1,12 @@
+---
+# Same pool as rendered by the techno_tim k3s_server_post role (metallb.crs.j2)
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: first-pool
+  namespace: metallb-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  addresses:
+    - 192.168.178.20-192.168.178.29

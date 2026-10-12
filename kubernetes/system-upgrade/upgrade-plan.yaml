@@ -1,3 +1,11 @@
+# k3s upgrade Plans for system-upgrade-controller.
+#
+# `version` is pinned (no `channel`) so that upgrades only happen through a
+# reviewed PR (opened by Renovate) followed by a manual Argo CD sync.
+# The upgrade image tag is derived from `version` (`+` replaced by `-`).
+# Keep `version` equal in both Plans and in `k3s_version`
+# (inventory/group_vars/k3s_cluster.yml); Renovate bumps all three together.
+#
 # Server plan
 apiVersion: upgrade.cattle.io/v1
 kind: Plan
@@ -16,8 +24,8 @@ spec:
   serviceAccountName: system-upgrade
   upgrade:
     image: ghcr.io/k3s-io/k3s-upgrade
-  channel: https://update.k3s.io/v1-release/channels/v1.36
-  # version: 1.33.8+k3s3
+  # renovate: datasource=github-releases depName=k3s-io/k3s
+  version: v1.36.4+k3s1
 ---
 # Agent plan
 apiVersion: upgrade.cattle.io/v1
@@ -40,5 +48,5 @@ spec:
   serviceAccountName: system-upgrade
   upgrade:
     image: ghcr.io/k3s-io/k3s-upgrade
-  channel: https://update.k3s.io/v1-release/channels/v1.36
-  # version: 1.33.8+k3s3
+  # renovate: datasource=github-releases depName=k3s-io/k3s
+  version: v1.36.4+k3s1

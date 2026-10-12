@@ -1,0 +1,63 @@
+# kube-vip: provides the control-plane VIP (apiserver_endpoint) via ARP.
+# Mirrors the `kube-vip-ds` DaemonSet originally rendered by the techno_tim
+# k3s_server role (templates/vip.yaml.j2). Keep the leader-election settings
+# identical: old and new DaemonSets share the `plndr-cp-lock` lease during the
+# handoff, so only one of them announces the VIP at any time.
+image:
+  repository: ghcr.io/kube-vip/kube-vip
+  # Keep in sync with `kube_vip_tag_version` in inventory/group_vars/k3s_cluster.yml
+  tag: v1.2.3
+
+config:
+  # Keep in sync with `apiserver_endpoint` in inventory/group_vars/k3s_cluster.yml
+  address: 192.168.178.15
+
+env:
+  # Interface is auto-detected (same as the Ansible-rendered DaemonSet)
+  vip_interface: null
+  vip_arp: "true"
+  bgp_enable: "false"
+  port: "6443"
+  vip_subnet: "32"
+  cp_enable: "true"
+  cp_namespace: kube-system
+  vip_ddns: "false"
+  # Services are load balanced by MetalLB, not kube-vip
+  svc_enable: "false"
+  vip_leaderelection: "true"
+  vip_leaseduration: "15"
+  vip_renewdeadline: "10"
+  vip_retryperiod: "2"
+  # Chart defaults not used by the original DaemonSet
+  lb_enable: null
+  lb_port: null
+  svc_election: null
+  prometheus_server: null
+
+serviceAccount:
+  create: true
+  name: kube-vip
+
+securityContext:
+  capabilities:
+    add:
+      - NET_ADMIN
+      - NET_RAW
+      - SYS_TIME
+
+tolerations:
+  - effect: NoSchedule
+    operator: Exists
+  - effect: NoExecute
+    operator: Exists
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: node-role.kubernetes.io/master
+              operator: Exists
+        - matchExpressions:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists

@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: system-upgrade
+  namespace: argocd
+  labels:
+    name: system-upgrade
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/davmacario/dmhosted-infra
+    targetRevision: main
+    path: kubernetes/system-upgrade
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: system-upgrade
+  # Manual sync on purpose: syncing a new Plan `version` starts a k3s upgrade
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true

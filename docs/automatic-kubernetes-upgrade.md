@@ -9,6 +9,10 @@ tags:
 
 # Automatic K3s Upgrades
 
+> [!WARNING]
+>
+> Superseded by [automated-upgrades.md](./automated-upgrades.md): system-upgrade-controller is now managed by Argo CD and Plans are pinned to a `version`.
+
 This document explains the set up in place to automatically keep K3s up-to-date.
 We will follow the [K3s guide](https://docs.k3s.io/upgrades/automated).
 

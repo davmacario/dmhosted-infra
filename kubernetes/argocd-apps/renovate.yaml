@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: renovate
+  namespace: argocd
+  labels:
+    name: renovate
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/davmacario/dmhosted-infra
+    targetRevision: main
+    path: kubernetes/renovate
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: renovate
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false

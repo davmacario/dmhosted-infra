@@ -1,7 +1,6 @@
 ---
 - name: Pre tasks
   hosts: k3s_cluster
-  vars_files: vars/k3s.yml
   pre_tasks:
     - name: Verify Ansible is version 2.11 or above. (If this fails you may need to update Ansible)
       ansible.builtin.assert:
@@ -69,3 +68,94 @@
         dest: ~/.kube/config.new
         flat: true
       when: ansible_facts['hostname'] == hostvars[groups[group_name_master | default('master')][0]]['ansible_hostname']
+
+# Bootstrap ArgoCD, which will then install everything else (incl. kube-vip,
+# MetalLB)
+# Skipped if Argo CD is already installed.
+- name: Bootstrap GitOps (Argo CD + root app)
+  hosts: "{{ group_name_master | default('master') }}[0]"
+  become: true
+  environment: "{{ proxy_env | default({}) }}"
+  tags: gitops
+  vars:
+    repo_root: "{{ playbook_dir }}/.."
+    # Single source of truth for the Argo CD version: the kustomization Argo CD manages itself with
+    argocd_version: >-
+      {{ lookup('ansible.builtin.file', repo_root + '/kubernetes/apps/argocd/kustomization.yaml')
+         | regex_search('argo-cd/(v[0-9.]+)/manifests/install.yaml', '\1') | first }}
+    argocd_repo_url: https://github.com/davmacario/dmhosted-infra
+  tasks:
+    - name: Verify repository credentials are defined
+      ansible.builtin.assert:
+        that:
+          - argocd_repo_username is defined
+          - argocd_repo_password is defined
+        msg: >-
+          Define the vault-encrypted `argocd_repo_username` and `argocd_repo_password`
+          (GitHub token with read access to {{ argocd_repo_url }}) in inventory/group_vars/k3s_cluster.yml
+
+    - name: Check whether Argo CD is already installed
+      ansible.builtin.command: k3s kubectl get namespace argocd
+      register: argocd_ns
+      changed_when: false
+      failed_when: false
+
+    - name: Install Argo CD
+      when: argocd_ns.rc != 0
+      block:
+        # NOTE: use if restoring from existing cluster
+        # To do so, define the **sensitive** variable
+        # `sealed_secrets_key_manifest` (vault-encrypt it) obtained from:
+        #      `kubectl -n kube-system get secret -l sealedsecrets.bitnami.com/sealed-secrets-key -o yaml`
+        # If the variable is not defined, this step is skipped
+        - name: Restore the Sealed Secrets key (so existing SealedSecrets can be decrypted)
+          ansible.builtin.command:
+            cmd: k3s kubectl apply -f -
+            stdin: "{{ sealed_secrets_key_manifest }}"
+          when: sealed_secrets_key_manifest is defined
+          no_log: true
+
+        - name: Create argocd namespace
+          ansible.builtin.command: k3s kubectl create namespace argocd
+
+        - name: Apply Argo CD {{ argocd_version }} manifests
+          ansible.builtin.command: >-
+            k3s kubectl apply -n argocd --server-side --force-conflicts
+            -f https://raw.githubusercontent.com/argoproj/argo-cd/{{ argocd_version }}/manifests/install.yaml
+
+        - name: Wait for Argo CD to be ready
+          ansible.builtin.command: k3s kubectl -n argocd rollout status {{ item }} --timeout=300s
+          loop:
+            - deployment/argocd-repo-server
+            - deployment/argocd-server
+            - statefulset/argocd-application-controller
+          changed_when: false
+
+        # Replaced by the SealedSecret in kubernetes/apps/argocd once sealed-secrets is running
+        - name: Create repository credentials
+          ansible.builtin.command:
+            cmd: k3s kubectl apply -f -
+            stdin: "{{ repo_secret | to_nice_yaml }}"
+          vars:
+            repo_secret:
+              apiVersion: v1
+              kind: Secret
+              metadata:
+                name: github-repo-credentials
+                namespace: argocd
+                labels:
+                  argocd.argoproj.io/secret-type: repository
+                annotations:
+                  # Lets the SealedSecret take over this hand-created Secret
+                  sealedsecrets.bitnami.com/managed: "true"
+              stringData:
+                type: git
+                url: "{{ argocd_repo_url }}"
+                username: "{{ argocd_repo_username }}"
+                password: "{{ argocd_repo_password }}"
+          no_log: true
+
+        - name: Apply root app
+          ansible.builtin.command:
+            cmd: k3s kubectl apply -f -
+            stdin: "{{ lookup('ansible.builtin.file', repo_root + '/kubernetes/root-app.yaml') }}"

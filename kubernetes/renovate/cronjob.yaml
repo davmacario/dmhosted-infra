@@ -1,0 +1,91 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: renovate
+  namespace: renovate
+spec:
+  # Every 2 hours
+  schedule: "0 */2 * * *"
+  timeZone: Europe/Amsterdam
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      # The installation token expires after 1h
+      activeDeadlineSeconds: 3000
+      template:
+        spec:
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 12021
+            runAsGroup: 12021
+            fsGroup: 12021
+          initContainers:
+            - name: github-app-token
+              # Same image as the main container (provides node)
+              image: ghcr.io/renovatebot/renovate:41
+              args: ["node", "/scripts/github-app-token.mjs"]
+              env:
+                - name: GITHUB_APP_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: renovate-github-app
+                      key: app-id
+                - name: RENOVATE_REPOSITORIES
+                  valueFrom:
+                    configMapKeyRef:
+                      name: renovate-env
+                      key: RENOVATE_REPOSITORIES
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                - name: github-app
+                  mountPath: /github-app
+                  readOnly: true
+                - name: token
+                  mountPath: /token
+          containers:
+            - name: renovate
+              image: ghcr.io/renovatebot/renovate:41
+              # Keep the image entrypoint (containerbase setup), override CMD
+              args:
+                - bash
+                - -c
+                - |
+                  export RENOVATE_TOKEN="$(cat /token/token)"
+                  export GITHUB_COM_TOKEN="${RENOVATE_TOKEN}"
+                  exec renovate
+              envFrom:
+                - configMapRef:
+                    name: renovate-env
+              resources:
+                requests:
+                  cpu: 250m
+                  memory: 512Mi
+                limits:
+                  memory: 2Gi
+              volumeMounts:
+                - name: token
+                  mountPath: /token
+                  readOnly: true
+                - name: work
+                  mountPath: /tmp/renovate
+          volumes:
+            - name: scripts
+              configMap:
+                name: github-app-token-script
+            - name: github-app
+              secret:
+                secretName: renovate-github-app
+                items:
+                  - key: private-key
+                    path: private-key.pem
+            - name: token
+              emptyDir:
+                medium: Memory
+            - name: work
+              emptyDir: {}

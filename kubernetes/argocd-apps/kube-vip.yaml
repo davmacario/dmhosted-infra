@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-vip
+  namespace: argocd
+  labels:
+    name: kube-vip
+spec:
+  project: default
+  sources:
+    - repoURL: https://kube-vip.github.io/helm-charts
+      chart: kube-vip
+      # Chart 0.11.1 -> app v1.2.3, the version already running on the cluster
+      targetRevision: 0.11.1
+      helm:
+        releaseName: kube-vip
+        valueFiles:
+          - $values/kubernetes/kube-vip/values.yaml
+    - repoURL: https://github.com/davmacario/dmhosted-infra
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  # Manual sync on purpose: kube-vip serves the API server VIP
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false
