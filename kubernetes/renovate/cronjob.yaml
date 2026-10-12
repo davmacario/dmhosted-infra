@@ -33,7 +33,7 @@ spec:
                 - name: GITHUB_APP_ID
                   valueFrom:
                     secretKeyRef:
-                      name: renovate-github-app
+                      name: github-app
                       key: app-id
                 - name: RENOVATE_REPOSITORIES
                   valueFrom:
