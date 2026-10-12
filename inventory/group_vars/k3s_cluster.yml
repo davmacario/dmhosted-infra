@@ -113,7 +113,7 @@ extra_agent_args: >-
 
 # image tag for kube-vip (bootstrap only, Argo CD takes over: kubernetes/kube-vip/values.yaml)
 # renovate: datasource=docker depName=ghcr.io/kube-vip/kube-vip
-kube_vip_tag_version: v1.2.3
+kube_vip_tag_version: v1.2.4
 
 # tag for kube-vip-cloud-provider manifest
 # kube_vip_cloud_provider_tag_version: "main"
