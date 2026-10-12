@@ -26,7 +26,7 @@ services:
     cpus: 0.05
 
   whoami:
-    image: traefik/whoami
+    image: traefik/whoami:v1.12.0
     container_name: whoami
     hostname: whoami
     networks:

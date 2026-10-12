@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: nginx:latest
+          image: nginx:1.30.5
           imagePullPolicy: IfNotPresent
           resources:
             limits:
