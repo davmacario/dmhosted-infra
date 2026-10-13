@@ -1,5 +1,8 @@
-# MetalLB in native (non-FRR) L2 mode, matching the original Ansible install
+# MetalLB in native (non-FRR) L2 mode
 # (`metal_lb_type: native`, `metal_lb_mode: layer2`).
 speaker:
   frr:
     enabled: false
+# Not needed
+frrk8s:
+  enabled: false

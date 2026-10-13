@@ -6,7 +6,7 @@
 image:
   repository: ghcr.io/kube-vip/kube-vip
   # Keep in sync with `kube_vip_tag_version` in inventory/group_vars/k3s_cluster.yml
-  tag: v1.2.3
+  tag: v1.2.4
 
 config:
   # Keep in sync with `apiserver_endpoint` in inventory/group_vars/k3s_cluster.yml

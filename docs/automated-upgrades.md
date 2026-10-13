@@ -54,6 +54,7 @@ The goal of this section is to define the way upgrades to K3s, Flannel (CNI, bun
 - For K3s upgrades, configure target on the NAS to execute etcd snapshots
 - Ansible used to only install k3s and bootstrap ArgoCD
   - `k3s_install.yml` playbook needs to be refactored to not install MetalLB and KubeVIP
+    - Done: MetalLB is disabled, and the K3s auto-deploy manifests the roles write are disabled with `.skip` markers (kube-vip is still needed while servers join)
 
 ## Application Upgrades
 
@@ -73,13 +74,13 @@ Responsibilities get split:
 
 #### System Components
 
-| Component                 | Managed by                                                                 | Version lives in                                                                                 | Renovate group                        |
-| ------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------- |
+| Component                 | Managed by                                                                 | Version lives in                                                                                     | Renovate group                        |
+| ------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------- |
 | K3s (+ Flannel)           | [system-upgrade-controller](../kubernetes/argocd-apps/system-upgrade.yaml) | `version` in [upgrade-plan.yaml](../kubernetes/system-upgrade/upgrade-plan.yaml) + `k3s_version`[^1] | `k3s-io/k3s` (one PR per patch/minor) |
-| system-upgrade-controller | [Argo CD app](../kubernetes/argocd-apps/system-upgrade.yaml) (Kustomize)   | [kustomization.yaml](../kubernetes/system-upgrade/kustomization.yaml)                            | `system-upgrade-controller`           |
+| system-upgrade-controller | [Argo CD app](../kubernetes/argocd-apps/system-upgrade.yaml) (Kustomize)   | [kustomization.yaml](../kubernetes/system-upgrade/kustomization.yaml)                                | `system-upgrade-controller`           |
 | kube-vip                  | [Argo CD app](../kubernetes/argocd-apps/kube-vip.yaml) (Helm)              | chart version + [values.yaml](../kubernetes/kube-vip/values.yaml) + `kube_vip_tag_version`[^1]       | `kube-vip`                            |
-| MetalLB                   | [Argo CD app](../kubernetes/argocd-apps/metallb.yaml) (Helm)               | chart version                                                                                    | `metallb`                             |
-| Renovate                  | [Argo CD app](../kubernetes/argocd-apps/renovate.yaml) (plain manifests)   | image tag in [cronjob.yaml](../kubernetes/renovate/cronjob.yaml)                                 | `renovate`                            |
+| MetalLB                   | [Argo CD app](../kubernetes/argocd-apps/metallb.yaml) (Helm)               | chart version                                                                                        | `metallb`                             |
+| Renovate                  | [Argo CD app](../kubernetes/argocd-apps/renovate.yaml) (plain manifests)   | image tag in [cronjob.yaml](../kubernetes/renovate/cronjob.yaml)                                     | `renovate`                            |
 
 > [!NOTE]
 >
@@ -172,6 +173,7 @@ Setting this up (see [renovate folder](../kubernetes/renovate/)):
 7. Trigger a first run instead of waiting for the schedule, and check the detected dependencies in the logs:
 
    <!-- TODO: create script for convenience to trigger cronjob on demand (/scripts/...) -->
+
    ```bash
    kubectl -n renovate create job --from=cronjob/renovate renovate-manual-$(date +%s)
    kubectl -n renovate logs -f job/<job name> -c renovate
@@ -192,11 +194,36 @@ The current cluster was installed by Ansible.
 These steps move the system components under Argo CD without upgrading anything (all apps are pinned to the versions currently running).
 Merge the branch first: the root app creates the new Applications, which stay OutOfSync until synced.
 
-1. **system-upgrade-controller** (no downtime):
+> [!WARNING]
+>
+> The Ansible roles install kube-vip and MetalLB through the K3s [auto-deploy manifests](https://docs.k3s.io/installation/packaged-components) directory (`/var/lib/rancher/k3s/server/manifests/`: `vip.yaml`, `vip-rbac.yaml`, `metallb-crds.yaml`).
+> K3s re-applies these files on every restart, and when the objects are deleted, so the Ansible-managed objects come back after step 2 and 3 below.
+> Failed runs of the `k3s_install.yml` playbook might leave those behind.
+>
+> `kubectl -n kube-system get addon` lists them.
+>
+> Disable them on all server nodes **before** deleting any object (step 0).
+> This can be achieved by deleting those files, or creating the following:
+>
+> - `/var/lib/rancher/k3s/server/manifests/vip.yaml.skip`
+> - `/var/lib/rancher/k3s/server/manifests/vip-rbac.yaml.skip`
+> - `/var/lib/rancher/k3s/server/manifests/metallb-crds.yaml.skip`
+>
+> Which prevents k3s from applying the problematic files (see [Using .skip files](https://docs.k3s.io/installation/packaged-components#using-skip-files)).
+> This is also automatically executed by point 1 in the [k3s_install.yml playbook](../playbooks/k3s_install.yml) - see below.
+
+1. **K3s auto-deploy manifests**: run the `handoff` play, which deletes the files and creates a `.skip` marker for each of them on all server nodes, without affecting running objects.
+   The play is idempotent and runs at the end of every playbook run: the markers stay in place, so a later run of the `k3s_server` role on the same cluster (which writes the files again) does not bring the Ansible-managed objects back.
+
+   ```bash
+   ansible-playbook playbooks/k3s_install.yml --tags handoff
+   ```
+
+2. **system-upgrade-controller** (no downtime):
    - Sync `system-upgrade`. Argo CD adopts the hand-installed objects (same names, v0.19.0).
    - SUC runs one Job per node because the Plans are new. The version already matches, so K3s is not upgraded, but each node is **cordoned briefly**.
    - Check: `kubectl -n system-upgrade get plans,jobs` and that all nodes are `Ready` and schedulable.
-2. **kube-vip** (no downtime expected):
+3. **kube-vip** (no downtime expected):
 
    - Sync `kube-vip`. The new `kube-vip` DaemonSet starts next to `kube-vip-ds`; both use the `plndr-cp-lock` lease, so only one announces the VIP.
    - Check: `kubectl -n kube-system get pods -o wide | grep kube-vip` (6 pods running) and `kubectl -n kube-system get lease plndr-cp-lock`.
@@ -210,7 +237,7 @@ Merge the branch first: the root app creates the new Applications, which stay Ou
 
    - Check: `kubectl --server https://192.168.178.15:6443 get nodes` works, and the lease holder is a pod of the new DaemonSet.
 
-3. **MetalLB** (short blip in LoadBalancer IP announcements, do it at a quiet moment):
+4. **MetalLB** (short blip in LoadBalancer IP announcements, do it at a quiet moment):
 
    - Delete the Ansible-managed controller, speaker and RBAC. Keep the namespace, the CRDs, the `IPAddressPool` and the `L2Advertisement`, so Services keep their IPs:
 
@@ -227,8 +254,9 @@ Merge the branch first: the root app creates the new Applications, which stay Ou
 
    - Immediately sync `metallb`. The IP pool and L2 advertisement are synced last (sync wave 1) and retried until the webhook is up.
    - Check: `kubectl -n metallb-system get pods`, `kubectl get svc -A | grep LoadBalancer` (same external IPs), and that Traefik answers on its IP.
+   - Check that the handoff holds: restart K3s on one server (`sudo systemctl restart k3s`), then verify that only `metallb-*` objects exist in `metallb-system` (`kubectl -n metallb-system get deploy,ds,sa`) and that `kube-vip-ds` did not come back.
 
-4. **Renovate**: follow [Renovate setup](#renovate-setup).
+5. **Renovate**: follow [Renovate setup](#renovate-setup).
 
 ### Fresh install
 
@@ -240,6 +268,9 @@ Merge the branch first: the root app creates the new Applications, which stay Ou
 4. applies the [root app](../kubernetes/root-app.yaml)
 
 The play is skipped if the `argocd` namespace already exists.
+The last play (`handoff`) disables the K3s auto-deploy manifests of kube-vip, see [step 1 of the handoff](#handoff-from-ansible-one-time-migration).
+MetalLB is not installed by Ansible (`metal_lb_enabled: false`).
+
 Afterwards, sync the applications in Argo CD (starting with `sealed-secrets` and `argocd`); kube-vip is adopted the same way as in the handoff above.
 
 ---
