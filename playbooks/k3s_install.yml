@@ -159,3 +159,36 @@
           ansible.builtin.command:
             cmd: k3s kubectl apply -f -
             stdin: "{{ lookup('ansible.builtin.file', repo_root + '/kubernetes/root-app.yaml') }}"
+
+# The k3s_server role deploys kube-vip (and MetalLB, when enabled) through the
+# K3s auto-deploy manifests directory, which K3s re-applies on every restart and
+# whenever the objects are deleted. Argo CD owns these components, so disable
+# the manifests with a `.skip` marker. Objects already running are kept (kube-vip
+# still serves the API VIP).
+- name: Hand off kube-vip and MetalLB to Argo CD
+  hosts: k3s_master
+  become: true
+  tags: handoff
+  vars:
+    k3s_manifests_dir: /var/lib/rancher/k3s/server/manifests
+    k3s_handoff_manifests:
+      - vip.yaml
+      - vip-rbac.yaml
+      - metallb-crds.yaml
+  tasks:
+    # Created even if the manifest is absent: the k3s_server role rewrites it on
+    # the next run, and the marker keeps K3s from applying it until the role's
+    # cleanup removes both
+    - name: Stop K3s from re-applying them
+      ansible.builtin.copy:
+        content: ""
+        dest: "{{ k3s_manifests_dir }}/{{ item }}.skip"
+        mode: "0644"
+        force: false
+      loop: "{{ k3s_handoff_manifests }}"
+
+    - name: Remove problematic files
+      ansible.builtin.file:
+        state: absent
+        path: "{{ k3s_manifests_dir }}/{{ item }}"
+      loop: "{{ k3s_handoff_manifests }}"
