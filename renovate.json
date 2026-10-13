@@ -1,71 +1,130 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "description": "Application upgrades. See docs/automated-upgrades.md",
-  "extends": ["config:recommended"],
+  "extends": [
+    "config:recommended"
+  ],
   "dependencyDashboard": true,
-  "labels": ["dependencies"],
+  "labels": [
+    "dependencies"
+  ],
   "automerge": false,
   "includePaths": [
-    "inventory/group_vars/k3s_cluster.yml",
-    "kubernetes/system-upgrade/**",
-    "kubernetes/metallb/**",
-    "kubernetes/kube-vip/**",
-    "kubernetes/renovate/**",
-    "kubernetes/argocd-apps/metallb.yaml",
-    "kubernetes/argocd-apps/kube-vip.yaml"
+    "inventory/group_vars/k3s_cluster.ya?ml",
+    "kubernetes/**",
+    "docker/**"
   ],
-  "enabledManagers": ["argocd", "helm-values", "kubernetes", "custom.regex"],
+  "ignorePaths": [
+    "**/test/**", // avoid overriding extended config
+    "**/default-values.yaml",
+    "kubernetes/cloudnativepg/demo/**",
+    "kubernetes/democratic-csi/nfs/test-sc.yaml"
+  ],
+  "enabledManagers": [
+    "argocd",
+    "helm-values",
+    "kubernetes",
+    "custom.regex",
+    "docker-compose"
+  ],
   "argocd": {
-    "managerFilePatterns": ["/^kubernetes/argocd-apps/.+\\.yaml$/"]
+    "managerFilePatterns": [
+      "/^kubernetes/argocd-apps/.+\\.ya?ml$/"
+    ]
   },
   "kubernetes": {
-    "managerFilePatterns": ["/^kubernetes/renovate/.+\\.yaml$/"]
+    "managerFilePatterns": [
+      "/^kubernetes/.+\\.ya?ml$/"
+    ],
+    "ignorePaths": [
+      // targeted by custom regex manager below
+      "/^kubernetes/system-upgrade/.+\\.ya?ml$/"
+    ]
   },
   "customManagers": [
     {
       "description": "`# renovate:` comment above a `key: <version>` line or a release download URL",
       "customType": "regex",
       "managerFilePatterns": [
-        "/^inventory/group_vars/k3s_cluster\\.yml$/",
-        "/^kubernetes/system-upgrade/.+\\.yaml$/"
+        "/^inventory/group_vars/k3s_cluster\\.ya?ml$/",
+        "/^kubernetes/system-upgrade/.+\\.ya?ml$/"
       ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*[\\w-]+: \"?(?<currentValue>[^\"\\s]+)\"?",
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*- https://\\S+/releases/download/(?<currentValue>[^/]+)/"
       ]
+    },
+    {
+      "description": "Specific for CNPG Operator (version appears twice in the manifest URL)",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^kubernetes/cloudnativepg/kustomization\\.yaml"
+      ],
+      "matchStrings": [
+        "- https://github\\.com/cloudnative-pg/cloudnative-pg/releases/download/v(?<currentValue>\\d+\\.\\d+\\.\\d+)/cnpg-\\d+\\.\\d+\\.\\d+\\.yaml"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "cloudnative-pg/cloudnative-pg",
+      "extractVersionTemplate": "^v(?<version>.+)$",
+      "autoReplaceStringTemplate": "- https://github.com/cloudnative-pg/cloudnative-pg/releases/download/v{{{newValue}}}/cnpg-{{{newValue}}}.yaml"
     }
   ],
+  "docker-compose": {
+    "managerFilePatterns": [
+      "/^docker/.+/docker-compose\\.yaml"
+    ]
+  },
   "packageRules": [
     {
       "description": "k3s: one PR per patch and per minor (never skip a minor), wait for hotfix releases",
-      "matchPackageNames": ["k3s-io/k3s"],
+      "matchPackageNames": [
+        "k3s-io/k3s"
+      ],
       "versioning": "regex:^v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\+k3s(?<build>\\d+)$",
       "separateMinorPatch": true,
       "separateMultipleMinor": true,
       "minimumReleaseAge": "7 days",
-      "addLabels": ["system-upgrade", "k3s"]
+      "addLabels": [
+        "system-upgrade",
+        "k3s"
+      ]
     },
     {
       "description": "kube-vip: chart, image and Ansible bootstrap tag together",
-      "matchPackageNames": ["kube-vip", "ghcr.io/kube-vip/kube-vip"],
+      "matchPackageNames": [
+        "kube-vip",
+        "ghcr.io/kube-vip/kube-vip"
+      ],
       "groupName": "kube-vip",
       "minimumReleaseAge": "3 days",
-      "addLabels": ["system-upgrade"]
+      "addLabels": [
+        "system-upgrade"
+      ]
     },
     {
-      "matchPackageNames": ["metallb"],
+      "matchPackageNames": [
+        "metallb"
+      ],
       "groupName": "metallb",
       "minimumReleaseAge": "3 days",
-      "addLabels": ["system-upgrade"]
+      "addLabels": [
+        "system-upgrade"
+      ]
     },
     {
-      "matchPackageNames": ["rancher/system-upgrade-controller"],
+      "matchPackageNames": [
+        "rancher/system-upgrade-controller"
+      ],
       "groupName": "system-upgrade-controller",
       "minimumReleaseAge": "3 days",
-      "addLabels": ["system-upgrade"]
+      "addLabels": [
+        "system-upgrade"
+      ]
     },
     {
-      "matchPackageNames": ["ghcr.io/renovatebot/renovate"],
+      "matchPackageNames": [
+        "ghcr.io/renovatebot/renovate"
+      ],
       "groupName": "renovate",
       "minimumReleaseAge": "3 days"
     }

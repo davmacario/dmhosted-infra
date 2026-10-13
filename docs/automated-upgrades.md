@@ -137,12 +137,8 @@ Setting this up (see [renovate folder](../kubernetes/renovate/)):
    - **Repository permissions**: Checks (read/write), Commit statuses (read/write), Contents (read/write), Issues (read/write), Pull requests (read/write), Workflows (read/write), Administration (read), Metadata (read)
    - **Where can it be installed**: only this account.
 2. Generate a _private key_ (and download it), note the _App ID_, and install the App on the desired repos (starting with the current one - `davmacario/dmhosted-infra`).
-3. Get the bot user ID and place them in [configmap.yaml](../kubernetes/renovate/configmap.yaml):
-
-   ```bash
-   curl -s "https://api.github.com/users/<app-slug>%5Bbot%5D" | jq .id
-   ```
-
+3. Get the bot App ID and place them in [configmap.yaml](../kubernetes/renovate/configmap.yaml).
+   The App ID can be found in the app page ("Settings" > "Developer settings" > "GitHubApps" > "<your app name>").
 4. Create secret containing app ID and private key:
 
    ```yaml
@@ -156,7 +152,7 @@ Setting this up (see [renovate folder](../kubernetes/renovate/)):
    type: Opaque
    stringData:
      app-id: "<app id>"
-     private-key.pem: |
+     private-key: |
        -----BEGIN RSA PRIVATE KEY-----
        ...
        -----END RSA PRIVATE KEY-----
@@ -172,8 +168,6 @@ Setting this up (see [renovate folder](../kubernetes/renovate/)):
    This applies the `CronJob` manifest.
 7. Trigger a first run instead of waiting for the schedule, and check the detected dependencies in the logs:
 
-   <!-- TODO: create script for convenience to trigger cronjob on demand (/scripts/...) -->
-
    ```bash
    kubectl -n renovate create job --from=cronjob/renovate renovate-manual-$(date +%s)
    kubectl -n renovate logs -f job/<job name> -c renovate
@@ -188,11 +182,12 @@ For local settings, this can be done via a `renovate.json` file.
 
 [renovate.json](../renovate.json) contains the configuration for this repository.
 
-## Handoff from Ansible (one-time migration)
+---
+
+## Handoff from Ansible (one-time migration) - 2026-10-12
 
 The current cluster was installed by Ansible.
 These steps move the system components under Argo CD without upgrading anything (all apps are pinned to the versions currently running).
-Merge the branch first: the root app creates the new Applications, which stay OutOfSync until synced.
 
 > [!WARNING]
 >
@@ -253,12 +248,21 @@ Merge the branch first: the root app creates the new Applications, which stay Ou
      ```
 
    - Immediately sync `metallb`. The IP pool and L2 advertisement are synced last (sync wave 1) and retried until the webhook is up.
+   - If the sync fails with `no endpoints available for service "metallb-webhook-service"`, the adopted Service kept the old `component: controller` selector next to the chart's labels, so it matches no pod.
+     Remove the stale key, check that the endpoints point to the new controller, then sync again:
+
+     ```bash
+     kubectl -n metallb-system patch svc metallb-webhook-service --type=json \
+       -p '[{"op":"remove","path":"/spec/selector/component"}]'
+     kubectl -n metallb-system get endpointslices -l kubernetes.io/service-name=metallb-webhook-service
+     ```
+
    - Check: `kubectl -n metallb-system get pods`, `kubectl get svc -A | grep LoadBalancer` (same external IPs), and that Traefik answers on its IP.
    - Check that the handoff holds: restart K3s on one server (`sudo systemctl restart k3s`), then verify that only `metallb-*` objects exist in `metallb-system` (`kubectl -n metallb-system get deploy,ds,sa`) and that `kube-vip-ds` did not come back.
 
 5. **Renovate**: follow [Renovate setup](#renovate-setup).
 
-### Fresh install
+## Fresh install
 
 [k3s_install.yml](../playbooks/k3s_install.yml) installs K3s and kube-vip (needed for the API VIP while servers join), then the `Bootstrap GitOps` play:
 

@@ -1,3 +1,4 @@
+# NOTE: not used! metrics-server is installed as part of k3s (but not HA)
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
