@@ -11,7 +11,7 @@ spec:
     - repoURL: https://metallb.github.io/metallb
       chart: metallb
       # Chart 0.14.8 -> app v0.14.8, the version already running on the cluster
-      targetRevision: 0.14.8
+      targetRevision: 0.16.1
       helm:
         releaseName: metallb
         valueFiles:
