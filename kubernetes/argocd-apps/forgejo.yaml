@@ -10,7 +10,7 @@ spec:
   sources:
     - repoURL: code.forgejo.org/forgejo-helm
       chart: forgejo
-      targetRevision: 17.1.7
+      targetRevision: 17.3.0
       helm:
         valueFiles:
           - $values/kubernetes/apps/forgejo/values.yaml
