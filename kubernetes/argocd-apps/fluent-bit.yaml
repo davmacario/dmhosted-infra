@@ -10,7 +10,7 @@ spec:
   sources:
     - repoURL: ghcr.io/fluent/helm-charts
       chart: fluent-bit-collector
-      targetRevision: 1.1.2
+      targetRevision: 1.1.3
       helm:
         releaseName: fluent-bit-collector
         valueFiles:
