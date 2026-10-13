@@ -1,21 +1,17 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "description": "Application upgrades. See docs/automated-upgrades.md",
-  "extends": [
-    "config:recommended"
-  ],
+  "extends": ["config:recommended"],
   "dependencyDashboard": true,
-  "labels": [
-    "dependencies"
-  ],
+  "labels": ["dependencies"],
   "automerge": false,
   "includePaths": [
-    "inventory/group_vars/k3s_cluster.ya?ml",
+    "inventory/group_vars/k3s_cluster.yaml",
     "kubernetes/**",
     "docker/**"
   ],
   "ignorePaths": [
-    "**/test/**", // avoid overriding extended config
+    "**/test/**",
     "**/default-values.yaml",
     "kubernetes/cloudnativepg/demo/**",
     "kubernetes/democratic-csi/nfs/test-sc.yaml"
@@ -28,18 +24,10 @@
     "docker-compose"
   ],
   "argocd": {
-    "managerFilePatterns": [
-      "/^kubernetes/argocd-apps/.+\\.ya?ml$/"
-    ]
+    "managerFilePatterns": ["/^kubernetes/argocd-apps/.+\\.ya?ml$/"]
   },
   "kubernetes": {
-    "managerFilePatterns": [
-      "/^kubernetes/.+\\.ya?ml$/"
-    ],
-    "ignorePaths": [
-      // targeted by custom regex manager below
-      "/^kubernetes/system-upgrade/.+\\.ya?ml$/"
-    ]
+    "managerFilePatterns": ["/^kubernetes/.+\\.ya?ml$/"]
   },
   "customManagers": [
     {
@@ -47,18 +35,21 @@
       "customType": "regex",
       "managerFilePatterns": [
         "/^inventory/group_vars/k3s_cluster\\.ya?ml$/",
-        "/^kubernetes/system-upgrade/.+\\.ya?ml$/"
+        "/^kubernetes/system-upgrade/.+\\.ya?ml$/",
+        "/^kubernetes/apps/karakeep/karakeep-configuration\\.yaml$/",
+        "/^kubernetes/apps/argocd/kustomization\\.yaml$/"
       ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*[\\w-]+: \"?(?<currentValue>[^\"\\s]+)\"?",
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*- https://\\S+/releases/download/(?<currentValue>[^/]+)/"
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*- https://\\S+/releases/download/(?<currentValue>[^/]+)/",
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*- https://\\S+/(?<currentValue>[^/]+)/manifests/install.yaml"
       ]
     },
     {
       "description": "Specific for CNPG Operator (version appears twice in the manifest URL)",
       "customType": "regex",
       "managerFilePatterns": [
-        "/^kubernetes/cloudnativepg/kustomization\\.yaml"
+        "/^kubernetes/cloudnativepg/kustomization\\.ya?ml/"
       ],
       "matchStrings": [
         "- https://github\\.com/cloudnative-pg/cloudnative-pg/releases/download/v(?<currentValue>\\d+\\.\\d+\\.\\d+)/cnpg-\\d+\\.\\d+\\.\\d+\\.yaml"
@@ -70,61 +61,290 @@
     }
   ],
   "docker-compose": {
-    "managerFilePatterns": [
-      "/^docker/.+/docker-compose\\.yaml"
-    ]
+    "managerFilePatterns": ["/^docker/.+/docker-compose\\.yaml/"]
   },
   "packageRules": [
     {
-      "description": "k3s: one PR per patch and per minor (never skip a minor), wait for hotfix releases",
-      "matchPackageNames": [
-        "k3s-io/k3s"
+      "matchFileNames": [
+        "kubernetes/argocd-apps/argocd.yaml",
+        "kubernetes/apps/argocd/**"
       ],
+      "groupName": "argocd",
+      "addLabels": ["platform"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/cert-manager.yaml",
+        "kubernetes/cert-manager/**"
+      ],
+      "groupName": "cert-manager",
+      "addLabels": ["platform"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/cloudflare-tunnel.yaml",
+        "kubernetes/cloudflare-tunnel/**"
+      ],
+      "groupName": "cloudflare-tunnel",
+      "addLabels": ["platform"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/cloudnativepg.yaml",
+        "kubernetes/cloudnativepg/**"
+      ],
+      "groupName": "cloudnativepg",
+      "addLabels": ["platform"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/democratic-csi.yaml",
+        "kubernetes/democratic-csi/**"
+      ],
+      "groupName": "democratic-csi",
+      "addLabels": ["platform"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/dmhosted-blog.yaml",
+        "kubernetes/apps/dmhosted-blog/**",
+        "docker/blog-backup/**"
+      ],
+      "groupName": "dmhosted-blog",
+      "addLabels": ["app"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/external-dns-cloudflare.yaml",
+        "kubernetes/external-dns/**"
+      ],
+      "groupName": "external-dns-cloudflare",
+      "addLabels": ["platform"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/firefly-iii.yaml",
+        "kubernetes/apps/firefly-iii/**"
+      ],
+      "groupName": "firefly-iii",
+      "addLabels": ["app"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/fluent-bit.yaml",
+        "kubernetes/monitoring/fluent-bit/**"
+      ],
+      "groupName": "fluent-bit",
+      "addLabels": ["platform"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/forgejo.yaml",
+        "kubernetes/apps/forgejo/**"
+      ],
+      "groupName": "forgejo",
+      "addLabels": ["app"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/homepage.yaml",
+        "kubernetes/apps/homepage/**"
+      ],
+      "groupName": "homepage",
+      "addLabels": ["app"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/immich.yaml",
+        "kubernetes/apps/immich/**"
+      ],
+      "groupName": "immich",
+      "addLabels": ["app"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/it-tools.yaml",
+        "kubernetes/apps/it-tools/**"
+      ],
+      "groupName": "it-tools",
+      "addLabels": ["app"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/karakeep.yaml",
+        "kubernetes/apps/karakeep/**"
+      ],
+      "groupName": "karakeep",
+      "addLabels": ["app"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/longhorn.yaml",
+        "kubernetes/longhorn/**"
+      ],
+      "groupName": "longhorn",
+      "addLabels": ["platform"]
+    },
+    {
+      "matchFileNames": ["kubernetes/metrics-server/**"],
+      "groupName": "metrics-server",
+      "addLabels": ["platform"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/monitoring.yaml",
+        "kubernetes/monitoring/kube-prometheus/**"
+      ],
+      "groupName": "monitoring",
+      "addLabels": ["platform"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/monitoring-loki.yaml",
+        "kubernetes/monitoring/loki/**"
+      ],
+      "groupName": "monitoring-loki",
+      "addLabels": ["platform"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/networking.yaml",
+        "kubernetes/networking/**"
+      ],
+      "groupName": "networking",
+      "addLabels": ["platform"]
+    },
+    {
+      "matchFileNames": ["docker/node-exporter/**"],
+      "groupName": "node-exporter",
+      "addLabels": ["app"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/notes-rag.yaml",
+        "kubernetes/apps/notes-rag/**"
+      ],
+      "groupName": "notes-rag",
+      "addLabels": ["app"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/sealed-secrets-app.yaml",
+        "kubernetes/sealed-secrets/**"
+      ],
+      "groupName": "sealed-secrets",
+      "addLabels": ["platform"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/sparkyfitness.yaml",
+        "kubernetes/apps/sparkyfitness/**"
+      ],
+      "groupName": "sparkyfitness",
+      "addLabels": ["app"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/speedtest-tracker.yaml",
+        "kubernetes/apps/speedtest-tracker/**"
+      ],
+      "groupName": "speedtest-tracker",
+      "addLabels": ["app"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/stirling-pdf.yaml",
+        "kubernetes/apps/stirling-pdf/**"
+      ],
+      "groupName": "stirling-pdf",
+      "addLabels": ["app"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/system-configuration.yaml",
+        "kubernetes/system-configuration/**"
+      ],
+      "groupName": "system-configuration",
+      "addLabels": ["platform"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/tailscale-operator.yaml",
+        "kubernetes/tailscale-operator/**"
+      ],
+      "groupName": "tailscale-operator",
+      "addLabels": ["platform"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/traefik.yaml",
+        "kubernetes/traefik/**"
+      ],
+      "groupName": "traefik",
+      "addLabels": ["platform"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/traefik-tailscale.yaml",
+        "kubernetes/traefik-tailscale/**"
+      ],
+      "groupName": "traefik-tailscale",
+      "addLabels": ["platform"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/uptime-kuma.yaml",
+        "kubernetes/apps/uptime-kuma/**"
+      ],
+      "groupName": "uptime-kuma",
+      "addLabels": ["app"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/vaultwarden.yaml",
+        "kubernetes/apps/vaultwarden/**"
+      ],
+      "groupName": "vaultwarden",
+      "addLabels": ["app"]
+    },
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/whoami.yaml",
+        "kubernetes/apps/whoami/**"
+      ],
+      "groupName": "whoami",
+      "addLabels": ["app"]
+    },
+    {
+      "description": "k3s: one PR per patch and per minor (never skip a minor), wait for hotfix releases",
+      "matchPackageNames": ["k3s-io/k3s"],
       "versioning": "regex:^v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\+k3s(?<build>\\d+)$",
       "separateMinorPatch": true,
       "separateMultipleMinor": true,
       "minimumReleaseAge": "7 days",
-      "addLabels": [
-        "system-upgrade",
-        "k3s"
-      ]
+      "addLabels": ["system", "k3s"]
     },
     {
       "description": "kube-vip: chart, image and Ansible bootstrap tag together",
-      "matchPackageNames": [
-        "kube-vip",
-        "ghcr.io/kube-vip/kube-vip"
-      ],
+      "matchPackageNames": ["kube-vip", "ghcr.io/kube-vip/kube-vip"],
       "groupName": "kube-vip",
       "minimumReleaseAge": "3 days",
-      "addLabels": [
-        "system-upgrade"
-      ]
+      "addLabels": ["system"]
     },
     {
-      "matchPackageNames": [
-        "metallb"
-      ],
+      "matchPackageNames": ["metallb"],
       "groupName": "metallb",
       "minimumReleaseAge": "3 days",
-      "addLabels": [
-        "system-upgrade"
-      ]
+      "addLabels": ["system"]
     },
     {
-      "matchPackageNames": [
-        "rancher/system-upgrade-controller"
-      ],
+      "matchPackageNames": ["rancher/system-upgrade-controller"],
       "groupName": "system-upgrade-controller",
       "minimumReleaseAge": "3 days",
-      "addLabels": [
-        "system-upgrade"
-      ]
+      "addLabels": ["system"]
     },
     {
-      "matchPackageNames": [
-        "ghcr.io/renovatebot/renovate"
-      ],
+      "matchPackageNames": ["ghcr.io/renovatebot/renovate"],
       "groupName": "renovate",
       "minimumReleaseAge": "3 days"
     }

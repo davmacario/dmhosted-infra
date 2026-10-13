@@ -4,5 +4,6 @@ metadata:
   namespace: karakeep
 kind: ConfigMap
 data:
+  # renovate: datasource=docker depName=ghcr.io/karakeep-app/karakeep
   KARAKEEP_VERSION: 0.32.0
   NEXTAUTH_URL: https://karakeep.internal.dmhosted.com
