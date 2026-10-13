@@ -10,7 +10,7 @@ spec:
   sources:
     - repoURL: ghcr.io/immich-app/immich-charts
       chart: immich
-      targetRevision: 0.13.2
+      targetRevision: 0.13.4
       helm:
         valueFiles:
           - $values/kubernetes/apps/immich/values.yaml
