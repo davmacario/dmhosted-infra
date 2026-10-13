@@ -1,11 +1,3 @@
----
-id: dmhosted-infra
-author: Davide Macario
-date: 2026-06-22
-tags:
-  - homelab
----
-
 # DMHosted
 
 This repository is the source of truth for (most of) my homelab and personal infra.
