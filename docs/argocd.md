@@ -42,7 +42,7 @@ This is because all the configuration of ArgoCD can be done declarative using a 
 This method allows to easily manage the settings and add new apps to ArgoCD, including ArgoCD itself.
 Also, this allows to skip the manual steps done [here](#exposing-argocd).
 
-See the [argocd directory](../kubernetes/apps/argocd/) for the setup.
+See the [argocd directory](../kubernetes/argocd/) for the setup.
 
 You can deploy the stack by running:
 
@@ -116,7 +116,7 @@ spec:
     secretName: argocd-server-internal-cert
 ```
 
-See [here](../kubernetes/apps/argocd/argocd-ingressroute.yaml) for the full manifest (including the _Certificate_).
+See [here](../kubernetes/argocd/argocd-ingressroute.yaml) for the full manifest (including the _Certificate_).
 
 ## First login
 
@@ -257,7 +257,7 @@ Then, seal it:
 kubeseal -f github-repo-creds-secret.yaml -w github-repo-creds-secret-sealed.yaml --format=yaml
 ```
 
-and add the sealed secret file in the `resources` section of the [Kustomization](../kubernetes/apps/argocd/kustomization.yaml).
+and add the sealed secret file in the `resources` section of the [Kustomization](../kubernetes/argocd/kustomization.yaml).
 
 #### Manifest-only kube workloads
 
@@ -344,7 +344,7 @@ spec:
   source:
     repoURL: https://github.com/davmacario/dmhosted-infra
     targetRevision: main
-    path: kubernetes/apps/argocd
+    path: kubernetes/argocd
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
@@ -367,7 +367,7 @@ This way, to enroll/deploy a new application, it's enough to create a YAML for t
 It is best to use a declarative setup for configuring the settings, as the default deployment for the Server does not use any persistent storage.
 Everything is configured using a ConfigMap called `argocd-cm`.
 
-The customizations can be added to [argocd-cm-patch.yaml](../kubernetes/apps/argocd/argocd-cm-patch.yaml), and deployed using Kustomize.
+The customizations can be added to [argocd-cm-patch.yaml](../kubernetes/argocd/argocd-cm-patch.yaml), and deployed using Kustomize.
 
 ---
 

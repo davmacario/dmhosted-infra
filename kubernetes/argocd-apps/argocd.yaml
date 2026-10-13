@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/davmacario/dmhosted-infra
     targetRevision: main
-    path: kubernetes/apps/argocd
+    path: kubernetes/argocd
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

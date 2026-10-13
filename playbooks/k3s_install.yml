@@ -81,7 +81,7 @@
     repo_root: "{{ playbook_dir }}/.."
     # Single source of truth for the Argo CD version: the kustomization Argo CD manages itself with
     argocd_version: >-
-      {{ lookup('ansible.builtin.file', repo_root + '/kubernetes/apps/argocd/kustomization.yaml')
+      {{ lookup('ansible.builtin.file', repo_root + '/kubernetes/argocd/kustomization.yaml')
          | regex_search('argo-cd/(v[0-9.]+)/manifests/install.yaml', '\1') | first }}
     argocd_repo_url: https://github.com/davmacario/dmhosted-infra
   tasks:
@@ -131,7 +131,7 @@
             - statefulset/argocd-application-controller
           changed_when: false
 
-        # Replaced by the SealedSecret in kubernetes/apps/argocd once sealed-secrets is running
+        # Replaced by the SealedSecret in kubernetes/argocd once sealed-secrets is running
         - name: Create repository credentials
           ansible.builtin.command:
             cmd: k3s kubectl apply -f -

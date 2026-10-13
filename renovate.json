@@ -37,7 +37,7 @@
         "/^inventory/group_vars/k3s_cluster\\.ya?ml$/",
         "/^kubernetes/system-upgrade/.+\\.ya?ml$/",
         "/^kubernetes/apps/karakeep/karakeep-configuration\\.yaml$/",
-        "/^kubernetes/apps/argocd/kustomization\\.yaml$/"
+        "/^kubernetes/argocd/kustomization\\.yaml$/"
       ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*[\\w-]+: \"?(?<currentValue>[^\"\\s]+)\"?",
@@ -67,7 +67,7 @@
     {
       "matchFileNames": [
         "kubernetes/argocd-apps/argocd.yaml",
-        "kubernetes/apps/argocd/**"
+        "kubernetes/argocd/**"
       ],
       "groupName": "argocd",
       "addLabels": ["platform"]
