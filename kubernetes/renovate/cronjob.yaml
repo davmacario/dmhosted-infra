@@ -27,7 +27,7 @@ spec:
           initContainers:
             - name: github-app-token
               # Same image as the main container (provides node)
-              image: ghcr.io/renovatebot/renovate:41
+              image: ghcr.io/renovatebot/renovate:44
               args: ["node", "/scripts/github-app-token.mjs"]
               env:
                 - name: GITHUB_APP_ID
@@ -50,7 +50,7 @@ spec:
                   mountPath: /token
           containers:
             - name: renovate
-              image: ghcr.io/renovatebot/renovate:41
+              image: ghcr.io/renovatebot/renovate:44
               # Keep the image entrypoint (containerbase setup), override CMD
               args:
                 - bash
