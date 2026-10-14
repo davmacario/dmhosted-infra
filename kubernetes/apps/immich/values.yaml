@@ -5,6 +5,7 @@ controllers:
       main:
         image:
           # Deployed immich version - see https://github.com/immich-app/immich/releases
+          # renovate: datasource=docker depName=ghcr.io/immich-app/immich-server
           tag: v3.2.4
         env:
           REDIS_HOSTNAME: '{{ printf "%s-valkey" .Release.Name }}'

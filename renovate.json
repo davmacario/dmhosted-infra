@@ -40,6 +40,7 @@
         "/^inventory/group_vars/k3s_cluster\\.ya?ml$/",
         "/^kubernetes/system-upgrade/.+\\.ya?ml$/",
         "/^kubernetes/apps/karakeep/karakeep-configuration\\.yaml$/",
+        "/^kubernetes/apps/immich/values\\.yaml$/",
         "/^kubernetes/argocd/kustomization\\.yaml$/"
       ],
       "matchStrings": [
