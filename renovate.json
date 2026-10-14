@@ -9,7 +9,7 @@
   "prConcurrentLimit": 15,
   "reviewers": ["davmacario"],
   "includePaths": [
-    "inventory/group_vars/k3s_cluster.yaml",
+    "inventory/group_vars/k3s_cluster.yml",
     "kubernetes/**",
     "docker/**"
   ],
@@ -41,12 +41,14 @@
         "/^kubernetes/system-upgrade/.+\\.ya?ml$/",
         "/^kubernetes/apps/karakeep/karakeep-configuration\\.yaml$/",
         "/^kubernetes/apps/immich/values\\.yaml$/",
+        "/^kubernetes/apps/speedtest-tracker/speedtest-tracker\\.yaml$/",
         "/^kubernetes/argocd/kustomization\\.yaml$/"
       ],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*[\\w-]+: \"?(?<currentValue>[^\"\\s]+)\"?",
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*[\\w-]+: \"?(?<currentValue>[^\"\\s/]+)\"?(?:\\n|$)",
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*- https://\\S+/releases/download/(?<currentValue>[^/]+)/",
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*- https://\\S+/(?<currentValue>[^/]+)/manifests/install.yaml"
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*- https://\\S+/(?<currentValue>[^/]+)/manifests/install.yaml",
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*image: \\S+:(?<currentValue>[^\\s@\"]+)"
       ]
     },
     {
@@ -264,6 +266,12 @@
       ],
       "groupName": "speedtest-tracker",
       "addLabels": ["app"]
+    },
+    {
+      "description": "speedtest-tracker image is tracked by the custom regex manager (GitHub releases)",
+      "matchManagers": ["kubernetes"],
+      "matchPackageNames": ["lscr.io/linuxserver/speedtest-tracker"],
+      "enabled": false
     },
     {
       "matchFileNames": [
