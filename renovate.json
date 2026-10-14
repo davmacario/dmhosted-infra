@@ -125,6 +125,11 @@
       "addLabels": ["platform"]
     },
     {
+      "description": "external-dns image has no source label: point Renovate at the app release notes",
+      "matchPackageNames": ["registry.k8s.io/external-dns/external-dns"],
+      "changelogUrl": "https://github.com/kubernetes-sigs/external-dns"
+    },
+    {
       "matchFileNames": [
         "kubernetes/argocd-apps/firefly-iii.yaml",
         "kubernetes/apps/firefly-iii/**"
