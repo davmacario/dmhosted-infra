@@ -408,7 +408,7 @@ metadata:
   name: <ingress_name>
   namespace: <ingress_namespace>
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: nginx.local.dmhosted.com
+    external-dns.kubernetes.io/hostname: nginx.local.dmhosted.com
 # ...
 ```
 

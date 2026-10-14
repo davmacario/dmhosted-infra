@@ -4,10 +4,10 @@ metadata:
   name: dmhosted-blog-ingressroute
   namespace: dmhosted-blog
   annotations:
-    external-dns.alpha.kubernetes.io/provider: cloudflare
-    external-dns.alpha.kubernetes.io/hostname: blog.dmhosted.com
-    external-dns.alpha.kubernetes.io/target: b8f93036-6de6-4d1c-a590-bdbf64f990ad.cfargotunnel.com
-    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+    external-dns.kubernetes.io/provider: cloudflare
+    external-dns.kubernetes.io/hostname: blog.dmhosted.com
+    external-dns.kubernetes.io/target: b8f93036-6de6-4d1c-a590-bdbf64f990ad.cfargotunnel.com
+    external-dns.kubernetes.io/cloudflare-proxied: "true"
 spec:
   entryPoints:
     - websecure

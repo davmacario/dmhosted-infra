@@ -109,7 +109,7 @@ spec:
 ---
 # external-dns (for Cloudflare provider): manages the public DNS records for the
 # four IngressRoutes annotated
-#         external-dns.alpha.kubernetes.io/provider=cloudflare
+#         external-dns.kubernetes.io/provider=cloudflare
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
