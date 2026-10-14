@@ -171,6 +171,11 @@
       "addLabels": ["app"]
     },
     {
+      "description": "immich-server: tracked via GitHub releases (GHCR tag list is too large for the docker datasource)",
+      "matchPackageNames": ["immich-app/immich"],
+      "minimumReleaseAge": "1 day"
+    },
+    {
       "matchFileNames": [
         "kubernetes/argocd-apps/it-tools.yaml",
         "kubernetes/apps/it-tools/**"
