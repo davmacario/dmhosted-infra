@@ -10,7 +10,7 @@ spec:
   sources:
     - repoURL: https://helm.traefik.io/traefik
       chart: traefik
-      targetRevision: 41.7.1
+      targetRevision: 42.0.0
       helm:
         # Traefik CRDs are owned by the primary traefik instance.
         skipCrds: true
