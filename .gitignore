@@ -153,3 +153,6 @@ dmypy.json
 
 # Default values files (used for development, when adding new Helm chart)
 **/default-values.yaml
+
+# ansible-lint dependency cache
+.ansible/

@@ -1,0 +1,69 @@
+---
+# Upstream Helm default values dumps, kept for reference only
+exclude: default-values\.yaml$
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-yaml
+        args: [--allow-multiple-documents, --unsafe]
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: detect-private-key
+        # Docs contain placeholder PEM blocks
+        exclude: ^docs/
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.0
+    hooks:
+      - id: gitleaks
+
+  - repo: local
+    hooks:
+      - id: no-plain-k8s-secrets
+        name: no plain Kubernetes Secrets
+        entry: scripts/check-no-plain-secrets.sh
+        language: script
+        files: ^kubernetes/.*\.ya?ml$
+        # Deliberate dummy Secret used to test sealing
+        exclude: ^kubernetes/sealed-secrets/test/test\.yaml$
+
+      - id: kubeconform
+        name: kubeconform
+        entry: kubeconform
+        language: golang
+        additional_dependencies:
+          - github.com/yannh/kubeconform/cmd/kubeconform@v0.8.0
+        args:
+          - -strict
+          - -summary
+          - -ignore-missing-schemas
+          - -schema-location
+          - default
+          - -schema-location
+          - "https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
+        files: ^kubernetes/.*\.ya?ml$
+        # Helm values, kustomizations and patches are not full k8s manifests
+        exclude: (values|kustomization|-patch)\.ya?ml$
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.38.2
+    hooks:
+      - id: check-renovate
+      - id: check-github-workflows
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1-1
+    hooks:
+      - id: shellcheck

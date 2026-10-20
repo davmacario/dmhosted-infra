@@ -10,7 +10,7 @@
         cache_valid_time: 3600
     - name: upgrade
       apt:
-        upgrade: yes
+        upgrade: true
     - name: autoremove
       apt:
         autoremove: true

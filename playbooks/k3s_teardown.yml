@@ -8,7 +8,8 @@
       become: true
     - role: techno_tim.k3s_ansible.raspberrypi
       become: true
-      vars: { state: absent }
+      vars:
+        state: absent
   post_tasks:
     - name: Reboot and wait for node to come back up
       become: true
