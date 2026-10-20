@@ -25,7 +25,6 @@ tags:
 - [x] Kube-Prometheus stack
   - [x] Enable alerts
   - [x] Configure Grafana admin user password using secret
-  - [ ] Configure extra dashboards (configmaps)
   - [ ] Migrate all Grafana dashboards to be defined as code
 - [x] Migrate firefly-iii from puppydm01
   - [x] Deploy "empty" firefly-iii, using PostgreSQL
@@ -65,19 +64,27 @@ tags:
   - I expect the setup to be a tiny bit more complicated, as it will need a LoadBalancer service type (it is not HTTP...)
   - Actually, anything that would allow syncing obsidian works (should be in a de-centralized fashion, that's why syncthing)
 - [x] Rustfs (NAS)
-  - [ ] Use beta2 as backup target host (maybe just for some specific buckets)
 - [x] Immich
-  - [ ] figure out remote backup strategy
+  - [ ] Remote backup strategy
 - [x] Blog
-  - [ ] Configure replica on separate machine (`puppydm01`) using cloned cloudflared (so that it is seen as the same exact tunnel)
+  - [x] Configure replica on separate machine (`puppydm01`) using cloned cloudflared (so that it is seen as the same exact tunnel)
     - Also set up Service and ServiceMonitor to scrape it
-- [ ] Auto upgrades (in the form of automated PR opened or unattended upgrades)
+- [x] Auto upgrades (in the form of automated PR opened or unattended upgrades)
   - System upgrades (Kubernetes):
-    - [ ] Looking at the ansible roles used (from techno tim), the readme explicitly says that they should not be used to perform in-place upgrades.
+    - [x] Looking at the ansible roles used (from techno tim), the readme explicitly says that they should not be used to perform in-place upgrades.
   - App upgrades:
-    - [ ] Try out Renovate maybe
+    - [x] Try out Renovate maybe
 - [ ] Repurpose Nginx instances on beta2 / raspberry to use `internal.dmhosted.com`
-- [ ] Set up CI/CD pipelines in repo
+- [x] Set up CI/CD pipelines in repo
+  - [x] Kubernetes diff (using [Argo CD Diff Preview](https://dag-andersen.github.io/argocd-diff-preview/))
 - [x] Mirror repo on Forgejo
 - [x] Set up nodemonitor on hosts outside k8s and scrape them with prometheus
   - [ ] GPU metrics for hosts that support them
+- [ ] etcd backups on NAS (required before next system upgrade)
+- [ ] Migrate Nextcloud to K8s (from beta2)
+  - Best approach seems to be separate instance an migration of important data only
+- [ ] Repurpose beta2 as offsite backup target - only after Nextcloud migration
+  - Immich data
+  - RustFS (important stuff, e.g., DB backups) - need to look into it
+- [ ] Terraform setup for AdGuard Home
+- [ ] Deploy GitHub runner on k8s (allows running stuff against cluster without having to expose kube API publicly + opens up possibility of other CICD integrations)
