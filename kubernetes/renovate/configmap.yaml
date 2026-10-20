@@ -8,7 +8,7 @@ metadata:
   namespace: renovate
 data:
   RENOVATE_PLATFORM: github
-  RENOVATE_REPOSITORIES: davmacario/dmhosted-infra
+  RENOVATE_REPOSITORIES: davmacario/dmhosted-infra,davmacario/dmhosted-blog
   RENOVATE_ONBOARDING: "false"
   RENOVATE_REQUIRE_CONFIG: required
   # Commit through the GitHub API so commits are signed/verified as the App
