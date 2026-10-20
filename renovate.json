@@ -108,7 +108,7 @@
         "kubernetes/democratic-csi/**"
       ],
       "groupName": "democratic-csi",
-      "addLabels": ["platform"]
+      "addLabels": ["platform", "storage"]
     },
     {
       "matchFileNames": [
@@ -199,7 +199,7 @@
         "kubernetes/longhorn/**"
       ],
       "groupName": "longhorn",
-      "addLabels": ["platform"]
+      "addLabels": ["platform", "storage"]
     },
     {
       "matchFileNames": ["kubernetes/metrics-server/**"],

@@ -39,6 +39,7 @@ The goal of this section is to define the way upgrades to K3s, Flannel (CNI, bun
 - Upgrades come in the form of pull requests to the GitOps repo (current repository)
 - Frequency of upgrade checks is every 2 hours
 - "Handoff" from Ansible-managed to the long-term auto upgrade solution should be automated as much as possible
+- Allow enabling (configurable) "cooldown" periods after a new release (let it settle in and possible issues to appear)
 
 ### Decisions
 
@@ -58,7 +59,9 @@ The goal of this section is to define the way upgrades to K3s, Flannel (CNI, bun
 
 ## Application Upgrades
 
-The assumption is that all (relevant) applications are deployed by means of ArgoCD, in a GitOps fashion.
+Can reuse Renovate as well!
+The [Renovate config file](../renovate.json) can be configured to point to all available k8s manifests / docker-compose files / ArgoCD apps and automatically pick them up.
+This allows to use one tool for any upgrade.
 
 ---
 
@@ -92,13 +95,21 @@ Responsibilities get split:
 
 #### Applications
 
-> TODO: use the same Renovate cronjob, update renovate.json.
-> Should also include apps in docker/* (dmhosted-blog should be in the same group).
+Applications use the same Renovate CronJob and [renovate.json](../renovate.json) as the system components.
+
+- **One PR per Argo CD app**: each app has a `packageRule` matching its Argo app file (chart version) and its directory (image tags, values), with `groupName` set to the app name.
+  Adding an app means adding a rule; dependencies outside any rule fall back to one PR each - still acceptable for most solutions.
+- **Labels**: `app` for `kubernetes/apps/*` and `docker/*`, `platform` for the rest of the cluster infrastructure, `system` for the [system components](#system-components), `k3s` for K3s, and `storage` for CSI.
+  The system-component rules come last in `packageRules`, so they override the app rules.
+- **Versions outside images and charts** (remote kustomize URLs, the Karakeep ConfigMap) need a `# renovate: datasource=<datasource> depName=<name>` comment above the line, picked up by a **custom regex manager**.
+- **docker/**: `docker/blog-backup` is in the `dmhosted-blog` group, so the blog image is bumped in Kubernetes and Compose together.
+  Merging a PR does not deploy Compose stacks: run `docker compose pull && docker compose up -d` on the host.
+  - Note that this does not apply for Cloudflared...
 
 ### Upgrade flow
 
-1. Renovate (every 2 hours) opens a **PR** and lists it in the **Dependency Dashboard issue**.
-2. Review the **release notes** linked in the PR (for K3s, also the Kubernetes changelog for minor bumps), then merge.
+1. Renovate runs every 2 hours, scans all dependencies, opens a **PR** for each available upgrade, and lists it in the **Dependency Dashboard issue**.
+2. User (me) reviews the **release notes** linked in the PR (for K3s, also the Kubernetes changelog for minor bumps), then merge.
 3. In Argo CD, check the diff of the application, then **Sync**.
 4. For K3s, watch the rollout: `kubectl -n system-upgrade get plans,jobs` and `kubectl get nodes -o wide`.
    Nodes are cordoned and upgraded one at a time (`concurrency: 1`).
@@ -181,6 +192,74 @@ Renovate can be customized with global and local settings.
 For local settings, this can be done via a `renovate.json` file.
 
 [renovate.json](../renovate.json) contains the configuration for this repository.
+
+Used _managers_ (i.e., components able to read specific types of dependencies):
+
+- `argocd`: for all files under [kubernetes/argocd-apps/](../kubernetes/argocd-apps/); automatically detects versions from Helm charts.
+- `helm-values`: finds `values.yaml`
+- `kubernetes`: watches all deployments / replicasets / daemonsets / pods under the [kubernetes directory](../kubernetes)
+- `docker-compose`: all compose files in the [docker](../docker) directory
+- Custom `regex` managers: used for some kustomizations, other K8s manifests, versions in Ansible group vars, + a specific case for the CNPG Operator, where the version appears twice in the manifest URL.
+
+#### Grouping MRs by dependency
+
+Typically, in my setup, an app has:
+
+- ArgoCD `Application` CR definition (specifying, e.g., the version of the )
+- Own manifests / Helm chart values / Kustomize
+
+By default, changes to both files are seen as independent by Renovate, but they should be grouped.
+
+This is achieved via `packageRules` in renovate.json.
+
+For example, for ArgoCD:
+
+```json
+    {
+      "matchFileNames": [
+        "kubernetes/argocd-apps/argocd.yaml",
+        "kubernetes/argocd/**"
+      ],
+      "groupName": "argocd",
+      "addLabels": ["platform"]
+    },
+```
+
+This also allows to add specific labels to the PR via `addLabels`.
+
+#### Ensuring release stability
+
+This is an extra requirement for "core" components of the cluster (e.g., K3s version, metallb, kube-vip).
+I would like to only get PRs for upgrades when the new version has been released more than a specific number of days, to ensure possible issues have shown up, if any.
+
+This is once again achieved via `packageRules`, for example:
+
+```json
+    {
+      "matchPackageNames": ["metallb"],
+      "groupName": "metallb",
+      "minimumReleaseAge": "3 days",
+      "addLabels": ["system"]
+    },
+```
+
+This ensures MetalLB releases need to be stable for at least 3 days before being brought up.
+
+#### Tip: fixing Renovate failures for Docker dependencies
+
+Sometimes, for Docker dependencies (especially the ones that have lots of tags), renovate fails with the error:
+
+```text
+Renovate failed to look up the following dependencies: Failed to look up docker package <container image name>: no-result
+
+Files affected: <file containing container image>
+```
+
+This issue is caused by renovate "giving up" when the returned docker tags for the images are too many.
+
+A workaround in this cases, if the image is from GHCR, is to just switch up the _datasource_ for the dependency to `github-releases`, so that GH tags are used as tags.
+
+See [values.yaml for Immich](../kubernetes/apps/immich/values.yaml) for an example.
 
 ---
 
@@ -266,13 +345,13 @@ These steps move the system components under Argo CD without upgrading anything 
 
 [k3s_install.yml](../playbooks/k3s_install.yml) installs K3s and kube-vip (needed for the API VIP while servers join), then the `Bootstrap GitOps` play:
 
-1. applies the plain upstream Argo CD manifests, at the version referenced in [kubernetes/apps/argocd/kustomization.yaml](../kubernetes/apps/argocd/kustomization.yaml)
+1. applies the plain upstream Argo CD manifests, at the version referenced in [kubernetes/argocd/kustomization.yaml](../kubernetes/argocd/kustomization.yaml)
 2. creates the repository credentials from `argocd_repo_username`/`argocd_repo_password` (vault-encrypted, in group_vars)
 3. optionally restores the Sealed Secrets keys from `sealed_secrets_key_manifest` (vault-encrypted output of `kubectl -n kube-system get secret -l sealedsecrets.bitnami.com/sealed-secrets-key -o yaml`), so existing SealedSecrets can be decrypted
 4. applies the [root app](../kubernetes/root-app.yaml)
 
 The play is skipped if the `argocd` namespace already exists.
-The last play (`handoff`) disables the K3s auto-deploy manifests of kube-vip, see [step 1 of the handoff](#handoff-from-ansible-one-time-migration).
+The last play (`handoff`) disables the K3s auto-deploy manifests of kube-vip, see [step 1 of the handoff](#handoff-from-ansible-one-time-migration-2026-10-12).
 MetalLB is not installed by Ansible (`metal_lb_enabled: false`).
 
 Afterwards, sync the applications in Argo CD (starting with `sealed-secrets` and `argocd`); kube-vip is adopted the same way as in the handoff above.
