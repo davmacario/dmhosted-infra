@@ -9,7 +9,7 @@ Stack:
 - TrueNAS
 - AdGuard Home
 - Ansible
-- ~Docker (Compose)~ (old set-up, missing)
+- Docker (Compose) - incomplete
 
 _Everything runs on Linux._
 

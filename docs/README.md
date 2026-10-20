@@ -1,7 +1,7 @@
 ---
 id: docs-index
 author: Davide Macario
-date: 2026-08-11
+date: 2026-10-20
 tags:
   - homelab
 ---
@@ -18,8 +18,16 @@ This directory contains write-ups covering the setup, configuration, and mainten
 - [K3s Installation](./k3s-installation.md)
 - [Upgrading K3s Version (Using Ansible)](./k3s-version-upgrade.md)
 - [Automatic K3s Upgrades](./automatic-kubernetes-upgrade.md)
+- [Automated Upgrades](./automated-upgrades.md): unattended upgrades of K3s and core infra components (MetalLB, Kube VIP)
 - [ArgoCD](./argocd.md): enabling GitOps
 - [Sealed Secrets](./sealed-secrets.md): managing secrets in a GitOps way
+
+## Operations & CI/CD
+
+- [CI-CD Configuration](./ci-cd.md): GitHub workflows, including Argo CD diff previews on PRs
+- [Application Upgrade Strategy](./application-upgrades.md): automated version-bump PRs for apps and Helm charts
+- [Autoscaling Workloads](./autoscaling.md): HorizontalPodAutoscaler and VerticalPodAutoscaler
+- [Security Hardening for Containers in Kubernetes](./security-hardening.md)
 
 ## Networking & Tailscale
 
@@ -43,6 +51,7 @@ This directory contains write-ups covering the setup, configuration, and mainten
 
 ## Apps & Observability
 
+- [DMHosted Blog](./blog.md): Hugo static site, exposed via Cloudflare Tunnel
 - [Forgejo (on K8s)](./forgejo.md)
 - [Vaultwarden Setup on K3s](./vaultwarden-setup.md)
 - [Homepage Setup - K8s Cluster](./homepage.md)
