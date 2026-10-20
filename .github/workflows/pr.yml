@@ -25,6 +25,23 @@ jobs:
           ref: main
           path: main
 
+      - name: Prepare secrets
+        run: |
+          mkdir secrets
+          cat > secrets/secret.yaml << "EOF"
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: private-repo
+            namespace: argocd
+            labels:
+              argocd.argoproj.io/secret-type: repo-creds
+          stringData:
+            url: https://github.com/${{ github.repository }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+            username: not-used
+          EOF
+
       - name: Generate Diff
         run: |
           docker run \
