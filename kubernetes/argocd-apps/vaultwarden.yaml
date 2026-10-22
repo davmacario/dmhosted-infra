@@ -26,5 +26,8 @@ spec:
     server: https://kubernetes.default.svc
     namespace: vaultwarden
   syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=false

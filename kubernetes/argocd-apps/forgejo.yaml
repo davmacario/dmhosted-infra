@@ -25,3 +25,9 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: forgejo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false

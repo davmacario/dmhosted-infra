@@ -11,7 +11,8 @@
   "includePaths": [
     "inventory/group_vars/k3s_cluster.yml",
     "kubernetes/**",
-    "docker/**"
+    "docker/**",
+    "README.md"
   ],
   "ignorePaths": [
     "**/test/**",
@@ -64,6 +65,24 @@
       "depNameTemplate": "cloudnative-pg/cloudnative-pg",
       "extractVersionTemplate": "^v(?<version>.+)$",
       "autoReplaceStringTemplate": "- https://github.com/cloudnative-pg/cloudnative-pg/releases/download/v{{{newValue}}}/cnpg-{{{newValue}}}.yaml"
+    },
+    {
+      "description": "README Kubernetes badge (shows the K3s version without the +k3sN suffix)",
+      "customType": "regex",
+      "managerFilePatterns": ["/^README\\.md$/"],
+      "matchStrings": [
+        "\\[!\\[Kubernetes\\]\\([^)]+\\)\\]\\([^)]+\\) <!-- renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) version=(?<currentValue>\\S+) -->"
+      ],
+      "autoReplaceStringTemplate": "[![Kubernetes](https://img.shields.io/badge/Kubernetes-{{{replace '\\+k3s\\d+$' '' newValue}}}-326CE5?logo=kubernetes&logoColor=white)](https://kubernetes.io/releases/) <!-- renovate: datasource={{{datasource}}} depName={{{depName}}} version={{{newValue}}} -->"
+    },
+    {
+      "description": "README Argo CD badge",
+      "customType": "regex",
+      "managerFilePatterns": ["/^README\\.md$/"],
+      "matchStrings": [
+        "\\[!\\[Argo CD\\]\\([^)]+\\)\\]\\([^)]+\\) <!-- renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) version=(?<currentValue>\\S+) -->"
+      ],
+      "autoReplaceStringTemplate": "[![Argo CD](https://img.shields.io/badge/Argo%20CD-{{{newValue}}}-EF7B4D?logo=argo&logoColor=white)](./kubernetes/argocd/kustomization.yaml) <!-- renovate: datasource={{{datasource}}} depName={{{depName}}} version={{{newValue}}} -->"
     }
   ],
   "docker-compose": {
