@@ -26,5 +26,8 @@ spec:
     server: https://kubernetes.default.svc
     namespace: uptime-kuma
   syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=false
