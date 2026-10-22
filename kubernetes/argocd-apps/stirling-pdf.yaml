@@ -10,7 +10,7 @@ spec:
   sources:
     - repoURL: https://stirling-tools.github.io/Stirling-PDF-chart # URL of the Helm chart
       chart: stirling-pdf-chart
-      targetRevision: 3.2.0
+      targetRevision: 4.0.0
       helm:
         valueFiles: # Using ref - see next item in list
           - $values/kubernetes/apps/stirling-pdf/values.yaml
