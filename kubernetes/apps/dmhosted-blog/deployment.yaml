@@ -7,7 +7,6 @@ metadata:
     app: dmhosted-blog
 spec:
   revisionHistoryLimit: 3
-  replicas: 2
   strategy:
     type: RollingUpdate
     rollingUpdate:
