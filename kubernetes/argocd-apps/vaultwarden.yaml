@@ -22,6 +22,12 @@ spec:
       path: kubernetes/apps/vaultwarden
       directory:
         exclude: values.yaml
+  ignoreDifferences: # Allow HPA to work correctly
+    - kind: Deployment
+      group: apps
+      name: vaultwarden
+      jsonPointers:
+        - /spec/replicas
   destination:
     server: https://kubernetes.default.svc
     namespace: vaultwarden
@@ -31,3 +37,4 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=false
+      - RespectIgnoreDifferences=true
