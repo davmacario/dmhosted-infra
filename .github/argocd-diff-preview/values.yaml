@@ -1,0 +1,4 @@
+redis:
+  image:
+    # Override Redis registry to prevent rate limiting by ECR (default)
+    repository: mirror.gcr.io/library/redis
