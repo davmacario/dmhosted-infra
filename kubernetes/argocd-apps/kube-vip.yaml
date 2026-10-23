@@ -11,7 +11,7 @@ spec:
     - repoURL: https://kube-vip.github.io/helm-charts
       chart: kube-vip
       # Chart 0.11.1 -> app v1.2.3, the version already running on the cluster
-      targetRevision: 0.11.1
+      targetRevision: 0.11.2
       helm:
         releaseName: kube-vip
         valueFiles:
