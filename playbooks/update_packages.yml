@@ -1,8 +1,33 @@
 ---
 - name: Apt update & Apt upgrade -y
-  hosts: all
+  hosts: ansible_managed
   become: true
   strategy: free
+  vars:
+    common_packages: # Assumes all debian-based
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg-agent
+      - software-properties-common
+      - jq
+      - nmap
+      - open-iscsi
+      - nfs-common
+      - cryptsetup
+      - dmsetup
+      - net-tools
+      - cifs-utils
+      - multipath-tools
+      - scsitools
+      - lsscsi
+      - sysstat
+      - bpftrace
+      - linux-tools-common
+      - "linux-tools-{{ ansible_facts['kernel'] }}"
+      - iproute2
+    x86_packages:
+      - msr-tools
   tasks:
     - name: update
       apt:
@@ -11,6 +36,10 @@
     - name: upgrade
       apt:
         upgrade: true
+    - name: install
+      apt:
+        name: "{{ common_packages + (x86_packages if ansible_facts['architecture'] == 'x86_64' else [])}}"
+        state: present
     - name: autoremove
       apt:
         autoremove: true
