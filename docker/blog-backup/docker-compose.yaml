@@ -36,7 +36,7 @@ services:
     cpus: 0.03
 
   cloudflared:
-    image: cloudflare/cloudflared:2026.10.4
+    image: cloudflare/cloudflared:2026.10.5
     container_name: cloudflared
     env_file: .env
     entrypoint:
