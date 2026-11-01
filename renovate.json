@@ -42,14 +42,12 @@
         "/^kubernetes/system-upgrade/.+\\.ya?ml$/",
         "/^kubernetes/apps/karakeep/karakeep-configuration\\.yaml$/",
         "/^kubernetes/apps/immich/values\\.yaml$/",
-        "/^kubernetes/apps/speedtest-tracker/speedtest-tracker\\.yaml$/",
         "/^kubernetes/argocd/kustomization\\.yaml$/"
       ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*[\\w-]+: \"?(?<currentValue>[^\"\\s/]+)\"?(?:\\n|$)",
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*- https://\\S+/releases/download/(?<currentValue>[^/]+)/",
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*- https://\\S+/(?<currentValue>[^/]+)/manifests/install.yaml",
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*image: \\S+:(?<currentValue>[^\\s@\"]+)"
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*- https://\\S+/(?<currentValue>[^/]+)/manifests/install.yaml"
       ]
     },
     {
@@ -302,10 +300,9 @@
       "addLabels": ["app"]
     },
     {
-      "description": "speedtest-tracker image is tracked by the custom regex manager (GitHub releases)",
-      "matchManagers": ["kubernetes"],
+      "description": "linuxserver tags are `v<upstream version>-ls<build>`",
       "matchPackageNames": ["lscr.io/linuxserver/speedtest-tracker"],
-      "enabled": false
+      "versioning": "regex:^v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-ls(?<build>\\d+)$"
     },
     {
       "matchFileNames": [
