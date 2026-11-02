@@ -96,6 +96,12 @@
       "addLabels": ["platform"]
     },
     {
+      "description": "Group together Argo CD version and shield in README.md",
+      "matchDepNames": ["argoproj/argo-cd"],
+      "groupName": "argocd",
+      "addLabels": ["platform"]
+    },
+    {
       "matchFileNames": [
         "kubernetes/argocd-apps/cert-manager.yaml",
         "kubernetes/cert-manager/**"
