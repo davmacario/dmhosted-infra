@@ -42,7 +42,8 @@
         "/^kubernetes/system-upgrade/.+\\.ya?ml$/",
         "/^kubernetes/apps/karakeep/karakeep-configuration\\.yaml$/",
         "/^kubernetes/apps/immich/values\\.yaml$/",
-        "/^kubernetes/argocd/kustomization\\.yaml$/"
+        "/^kubernetes/argocd/kustomization\\.yaml$/",
+        "/^kubernetes/apps/vaultwarden/values\\.yaml$/"
       ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*[\\w-]+: \"?(?<currentValue>[^\"\\s/]+)\"?(?:\\n|$)",
