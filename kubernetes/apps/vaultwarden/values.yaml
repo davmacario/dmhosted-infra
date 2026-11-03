@@ -4,7 +4,7 @@ replicas: 1
 
 image:
   # renovate: datasource=docker depName=ghcr.io/dani-garcia/vaultwarden
-  tag: "1.37.3-alpine"
+  tag: "1.37.5-alpine"
 
 resources:
   limits:
