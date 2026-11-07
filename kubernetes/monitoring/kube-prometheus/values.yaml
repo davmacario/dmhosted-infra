@@ -199,6 +199,12 @@ grafana:
     type: Recreate
     rollingUpdate: null
   defaultDashboardsTimezone: Europe/Amsterdam
+  # Disable telemetry to grafana.com (usage stats and update checks)
+  grafana.ini:
+    analytics:
+      reporting_enabled: false
+      check_for_updates: false
+      check_for_plugin_updates: false
   admin:
     existingSecret: grafana-admin-secret
     userKey: user
