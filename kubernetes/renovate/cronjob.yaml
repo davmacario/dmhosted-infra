@@ -6,7 +6,7 @@ metadata:
   namespace: renovate
 spec:
   # Every 2 hours
-  schedule: "0 */2 * * *"
+  schedule: "0 */4 * * *"
   timeZone: Europe/Amsterdam
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
