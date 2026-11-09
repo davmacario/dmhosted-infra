@@ -68,17 +68,17 @@ rbac:
 
 service:
   enabled: true
-  type: LoadBalancer
   spec:
+    type: LoadBalancer
     loadBalancerClass: tailscale
+    loadBalancerSourceRanges: []
+    externalIPs: []
   annotations:
     # Links the Service to the ProxyGroup
     tailscale.com/proxy-group: ingress-proxies-traefik
     # Sets the MagicDNS hostname for the Tailscale Service
     tailscale.com/hostname: traefik-tailscale
   labels: {}
-  loadBalancerSourceRanges: []
-  externalIPs: []
 
 metrics:
   prometheus:
