@@ -21,7 +21,7 @@ controllers:
                 key: password
         resources:
           requests:
-            cpu: 250m
+            cpu: 100m
             memory: 256Mi
           limits:
             cpu: 2000m
@@ -53,6 +53,10 @@ valkey:
             repository: docker.io/valkey/valkey
             tag: 9.2-alpine@sha256:cdcb7b1c7b6f1c9cb9442c71ac6275e78184657448407b2c1fdde7ee8024f4fb
             pullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 25m
+              memory: 256Mi
       strategy: Recreate
   persistence:
     data:
@@ -107,7 +111,7 @@ machine-learning:
             MPLCONFIGDIR: /cache/matplotlib-config
           resources:
             requests:
-              cpu: 500m
+              cpu: 100m
               memory: 512Mi
             limits:
               cpu: 3000m
