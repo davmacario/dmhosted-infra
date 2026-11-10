@@ -529,6 +529,56 @@ No recurring snapshot/backup jobs are defined.
    To take a backup, go to "Volume" in the UI, select the volume, and choose "Create Backup".
    Backups show up under "Backup and Restore" > "Backups".
 
+## Upgrading Longhorn (v1.12.1 -> v1.13.0)
+
+See [guide](https://longhorn.io/docs/1.13.0/deploy/upgrade/longhorn-manager/) and [important notes](https://longhorn.io/docs/1.13.0/important-notes/).
+Only upgrades from v1.12.x are supported, Kubernetes must be v1.34 or later, and **downgrades are not possible**.
+
+What changes with our values:
+
+- New `longhorn-global-manager` Deployment (3 replicas, 1 leader), which takes the cluster-wide Pod/PV controllers out of the `longhorn-manager` DaemonSet.
+- New CSI controller ServiceAccount, with cluster-wide `get` on Secrets (`csi.allowControllerSecretAccess: true`, default).
+- New CRDs (`instancemanagerupgrades`, `instancemanagerupgradecontrols`, `snapshotgroups`).
+- No settings removed or renamed.
+
+### Pre-flight
+
+- No volume is `faulted`/`degraded` (`kubectl -n longhorn-system get volumes.longhorn.io`), and no backing image is failed.
+- Recent CNPG backups exist, and non-CNPG volumes have a manual backup (see [Default backup target](#default-backup-target-rustfs)).
+- `preUpgradeChecker.upgradeVersionCheck: false` is already set, which disables the pre-upgrade Job (recommended for ArgoCD).
+
+### Upgrading Longhorn Manager (automated)
+
+Bump the ArgoCD Application and the pinned images to v1.13.0 (Renovate does this), then merge.
+Check that all pods in `longhorn-system` are running, including `longhorn-global-manager-*`, and that the UI loads.
+
+### Upgrading Longhorn Engine
+
+Same as [v1.12](#upgrading-longhorn-engine): replicated volumes are upgraded online automatically, strictly-local volumes (CNPG) are upgraded once detached, following [Migrating strictly-local Longhorn volumes](#migrating-strictly-local-longhorn-volumes).
+
+Service checklist
+
+- [ ] forgejo
+- [ ] immich
+- [ ] vaultwarden
+- [ ] firefly-iii
+- [ ] speedtest-tracker
+- [ ] sparkyfitness
+
+Then [shut down the old engine](#shutting-down-old-longhorn-engine) once its `REFCOUNT` is 0, and check that Longhorn metrics are still collected.
+
+## Reducing Longhorn CPU usage
+
+Most of Longhorn's CPU goes to the instance managers, which run one engine process per volume and one process per replica.
+Changes in [values.yaml](../kubernetes/longhorn/values.yaml):
+
+- `guaranteedInstanceManagerCPU: '{"v1":"5","v2":"12"}'`: each instance manager **requests** a % of the node CPU (default 12%, i.e. 480m on a 4-core node), regardless of actual usage.
+  Only applied when instance manager pods are recreated (e.g., after an engine upgrade).
+- `engineImagePodLivenessProbePeriod: 30`: the engine image pods are probed every 5s by default.
+- `metrics.serviceMonitor.interval: 60s`: each scrape walks all volumes and replicas.
+
+Not set in values, but the biggest lever: reduce the number of replicas of low-value volumes (caches, search indexes, ...) from 3 to 2 (or 1), from the volume's "Update Replicas Count" operation in the UI.
+
 ---
 
 ## Links
