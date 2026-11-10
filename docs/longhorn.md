@@ -552,20 +552,65 @@ What changes with our values:
 Bump the ArgoCD Application and the pinned images to v1.13.0 (Renovate does this), then merge.
 Check that all pods in `longhorn-system` are running, including `longhorn-global-manager-*`, and that the UI loads.
 
+> [!WARNING]
+>
+> Sync the `root` app first, and only sync `longhorn` once it shows the new `targetRevision`.
+> The chart version comes from [longhorn.yaml](../kubernetes/argocd-apps/longhorn.yaml) (synced by `root`), while the values are read straight from `main`.
+> Syncing `longhorn` too early renders the **old chart with the new images**: the v1.13.0 `longhorn-manager` then runs with the v1.12.1 ClusterRole and CRDs, and keeps logging `... is forbidden: ... cannot list resource "instancemanagerupgrades"` (pods stuck at 1/2).
+> Fix: terminate the running sync operation, refresh, and sync again.
+
 ### Upgrading Longhorn Engine
 
 Same as [v1.12](#upgrading-longhorn-engine): replicated volumes are upgraded online automatically, strictly-local volumes (CNPG) are upgraded once detached, following [Migrating strictly-local Longhorn volumes](#migrating-strictly-local-longhorn-volumes).
 
+> [!IMPORTANT]
+>
+> All the app Applications have `selfHeal: true`, which immediately scales workloads back up.
+> Before scaling anything down, disable auto-sync on `root` (it would otherwise restore the child Applications' sync policy) and on the app:
+>
+> ```bash
+> kubectl -n argocd patch application root --type json -p '[{"op":"remove","path":"/spec/syncPolicy/automated"}]'
+> kubectl -n argocd patch application <app> --type json -p '[{"op":"remove","path":"/spec/syncPolicy/automated"}]'
+> ```
+>
+> Once done, re-enable it (app first, `root` last); selfHeal then restores the replica counts:
+>
+> ```bash
+> kubectl -n argocd patch application <app> --type merge -p '{"spec":{"syncPolicy":{"automated":{"prune":true,"selfHeal":true}}}}'
+> ```
+
+For each service: pause the app, scale it to 0, hibernate the DB, wait for the volumes to be `detached` and on the new engine (`kubectl -n longhorn-system get volumes.longhorn.io -o custom-columns=PVC:.status.kubernetesStatus.pvcName,STATE:.status.state,IMG:.status.currentImage`), remove hibernation, wait for the DB to be healthy, re-enable auto-sync.
+
 Service checklist
 
-- [ ] forgejo
-- [ ] immich
-- [ ] vaultwarden
-- [ ] firefly-iii
-- [ ] speedtest-tracker
-- [ ] sparkyfitness
+- [x] speedtest-tracker
+- [x] sparkyfitness
+- [x] firefly-iii
+- [x] forgejo
+- [x] vaultwarden
+  - ArgoCD ignores `/spec/replicas` (HPA-managed), and the HPA does nothing at 0 replicas: scale back to 1 manually
+- [x] immich (also detaches the `immich-machine-learning` volume)
+
+Other strictly-local (`longhorn-singlecopy`) volumes, no DB to hibernate:
+
+- [x] notes-rag (`notes-rag-persistent`)
+- [x] Loki (`storage-loki-0`): scale the `loki` StatefulSet (app `monitoring-loki`)
+- [x] Prometheus: set `spec.replicas: 0` on the `Prometheus` CR (app `monitoring`)
 
 Then [shut down the old engine](#shutting-down-old-longhorn-engine) once its `REFCOUNT` is 0, and check that Longhorn metrics are still collected.
+
+#### Old instance managers left behind
+
+Volumes upgraded online keep their engine process on the **old** instance manager (reserving the old CPU request) until they are detached once.
+List the volumes still on them:
+
+```bash
+kubectl -n longhorn-system get engines.longhorn.io -o custom-columns=VOL:.spec.volumeName,IM:.status.instanceManagerName
+```
+
+A rolling restart is not enough, as the new pod lands on the same node and reuses the attachment: scale the workload to 0 and back (same ArgoCD pause as above).
+In this upgrade: karakeep (`web`, `meilisearch`), stirling-pdf, uptime-kuma, grafana, and Alertmanager (`spec.replicas: 0` on the `Alertmanager` CR).
+The old instance managers are removed once they have no engines/replicas left.
 
 ## Reducing Longhorn CPU usage
 
