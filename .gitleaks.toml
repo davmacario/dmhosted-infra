@@ -1,0 +1,10 @@
+[extend]
+useDefault = true
+
+# Prevent firing on sealed secrets
+[[allowlists]]
+description = "Sealed Secrets ciphertext"
+condition = "AND"
+paths = ['''-sealed\.ya?ml$''']
+regexTarget = "line"
+regexes = ['''^\s*[\w.-]+:\s*Ag[A-Za-z0-9+/]{300,}={0,2}\s*$''']
