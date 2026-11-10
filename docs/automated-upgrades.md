@@ -101,7 +101,7 @@ Applications use the same Renovate CronJob and [renovate.json](../renovate.json)
   Adding an app means adding a rule; dependencies outside any rule fall back to one PR each - still acceptable for most solutions.
 - **Labels**: `app` for `kubernetes/apps/*` and `docker/*`, `platform` for the rest of the cluster infrastructure, `system` for the [system components](#system-components), `k3s` for K3s, and `storage` for CSI.
   The system-component rules come last in `packageRules`, so they override the app rules.
-- **Versions outside images and charts** (remote kustomize URLs, the Karakeep ConfigMap) need a `# renovate: datasource=<datasource> depName=<name>` comment above the line, picked up by a **custom regex manager**.
+- **Versions outside images and charts** (remote kustomize URLs, the Karakeep ConfigMap, Helm values whose image keys don't end in `image`, like Longhorn's `image.longhorn.engine`) need a `# renovate: datasource=<datasource> depName=<name>` comment above the line, picked up by a **custom regex manager**.
 - **docker/**: `docker/blog-backup` is in the `dmhosted-blog` group, so the blog image is bumped in Kubernetes and Compose together.
   Merging a PR does not deploy Compose stacks: run `docker compose pull && docker compose up -d` on the host.
   - Note that this does not apply for Cloudflared...

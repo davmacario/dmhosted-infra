@@ -36,19 +36,25 @@ image:
   longhorn:
     engine:
       repository: longhornio/longhorn-engine
+      # renovate: datasource=docker depName=longhornio/longhorn-engine
       tag: v1.12.1
     manager:
       repository: longhornio/longhorn-manager
+      # renovate: datasource=docker depName=longhornio/longhorn-manager
       tag: v1.12.1
     instanceManager:
       repository: longhornio/longhorn-instance-manager
+      # renovate: datasource=docker depName=longhornio/longhorn-instance-manager
       tag: v1.12.1
     ui:
       repository: longhornio/longhorn-ui
+      # renovate: datasource=docker depName=longhornio/longhorn-ui
       tag: v1.12.1
     shareManager:
       repository: longhornio/longhorn-share-manager
+      # renovate: datasource=docker depName=longhornio/longhorn-share-manager
       tag: v1.12.1
     backingImageManager:
       repository: longhornio/backing-image-manager
+      # renovate: datasource=docker depName=longhornio/backing-image-manager
       tag: v1.12.1

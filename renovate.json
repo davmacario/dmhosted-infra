@@ -43,7 +43,8 @@
         "/^kubernetes/apps/karakeep/karakeep-configuration\\.yaml$/",
         "/^kubernetes/apps/immich/values\\.yaml$/",
         "/^kubernetes/argocd/kustomization\\.yaml$/",
-        "/^kubernetes/apps/vaultwarden/values\\.yaml$/"
+        "/^kubernetes/apps/vaultwarden/values\\.yaml$/",
+        "/^kubernetes/longhorn/values\\.yaml$/"
       ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n\\s*[\\w-]+: \"?(?<currentValue>[^\"\\s/]+)\"?(?:\\n|$)",
@@ -238,6 +239,13 @@
         "kubernetes/longhorn/**"
       ],
       "groupName": "longhorn",
+      "addLabels": ["platform", "storage"]
+    },
+    {
+      "description": "Longhorn chart and all longhornio images in one PR, wherever they are, including major bumps",
+      "matchPackageNames": ["longhorn", "longhornio/**"],
+      "groupName": "longhorn",
+      "separateMajorMinor": false,
       "addLabels": ["platform", "storage"]
     },
     {
