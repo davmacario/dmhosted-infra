@@ -10,7 +10,7 @@ spec:
   sources:
     - repoURL: ghcr.io/grafana-community/helm-charts
       chart: loki
-      targetRevision: 21.1.1
+      targetRevision: 21.2.0
       helm:
         releaseName: loki
         valueFiles:
