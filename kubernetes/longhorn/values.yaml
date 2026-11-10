@@ -1,6 +1,4 @@
 ---
-longhornUI:
-  replicas: 1
 defaultSettings:
   # Schedule pods on nodes that have the PVs they need
   defaultDataLocality: "best-effort"
@@ -12,6 +10,11 @@ defaultSettings:
   nodeDrainPolicy: block-if-contains-last-replica
   # Auto upgrade (if possible) volumes' engine version
   concurrentAutomaticEngineUpgradePerNodeLimit: 2
+  # CPU reserved (requested) by each instance manager, % of node CPU - default is 12
+  # Applied when instance manager pods are recreated
+  guaranteedInstanceManagerCPU: '{"v1":"5","v2":"12"}'
+  # Engine image pods liveness probe period (s) - default is 5
+  engineImagePodLivenessProbePeriod: 30
 persistence: # Applies to default SC only
   # If PVC is deleted, volumes are not deleted - need to do it manually
   reclaimPolicy: Retain
@@ -20,6 +23,10 @@ defaultBackupStore:
   backupTarget: s3://longhorn-backups@eu-west-1/
   backupTargetCredentialSecret: longhorn-backup-target
   pollInterval: 300
+
+longhornUI:
+  replicas: 1
+
 csi: # The following are all defaults
   attacherReplicaCount: 3
   provisionerReplicaCount: 3
@@ -29,6 +36,7 @@ csi: # The following are all defaults
 metrics:
   serviceMonitor:
     enabled: true
+    interval: 60s # Longhorn metrics are expensive to compute
     additionalLabels:
       release: prometheus-stack
 
@@ -42,24 +50,24 @@ image:
     engine:
       repository: longhornio/longhorn-engine
       # renovate: datasource=docker depName=longhornio/longhorn-engine
-      tag: v1.12.1
+      tag: v1.13.0
     manager:
       repository: longhornio/longhorn-manager
       # renovate: datasource=docker depName=longhornio/longhorn-manager
-      tag: v1.12.1
+      tag: v1.13.0
     instanceManager:
       repository: longhornio/longhorn-instance-manager
       # renovate: datasource=docker depName=longhornio/longhorn-instance-manager
-      tag: v1.12.1
+      tag: v1.13.0
     ui:
       repository: longhornio/longhorn-ui
       # renovate: datasource=docker depName=longhornio/longhorn-ui
-      tag: v1.12.1
+      tag: v1.13.0
     shareManager:
       repository: longhornio/longhorn-share-manager
       # renovate: datasource=docker depName=longhornio/longhorn-share-manager
-      tag: v1.12.1
+      tag: v1.13.0
     backingImageManager:
       repository: longhornio/backing-image-manager
       # renovate: datasource=docker depName=longhornio/backing-image-manager
-      tag: v1.12.1
+      tag: v1.13.0
