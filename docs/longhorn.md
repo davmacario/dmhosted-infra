@@ -439,6 +439,96 @@ spec:
           protocol: TCP
 ```
 
+## Default backup target (RustFS)
+
+Longhorn ships with a `default` BackupTarget, which every StorageClass references through `backupTargetName: default`, but its URL is empty.
+We point it at the RustFS instance on the NAS, so backups can be taken manually from the UI.
+No recurring snapshot/backup jobs are defined.
+
+1. On RustFS, create a `longhorn-backups` bucket and an access key restricted to it, with the following policy:
+
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Effect": "Allow",
+         "Action": [
+           "s3:GetBucketLocation",
+           "s3:ListBucket",
+           "s3:ListBucketMultipartUploads"
+         ],
+         "Resource": ["arn:aws:s3:::longhorn-backups"]
+       },
+       {
+         "Effect": "Allow",
+         "Action": [
+           "s3:GetObject",
+           "s3:PutObject",
+           "s3:DeleteObject",
+           "s3:AbortMultipartUpload",
+           "s3:ListMultipartUploadParts"
+         ],
+         "Resource": ["arn:aws:s3:::longhorn-backups/*"]
+       }
+     ]
+   }
+   ```
+
+   `s3:DeleteObject` is required: Longhorn creates and removes lock objects during every backup, and deletes blocks when a backup is removed.
+
+   > [!WARNING]
+   >
+   > Do not set lifecycle/retention rules on the bucket.
+   > Longhorn manages the backupstore contents itself, and deleting objects behind its back corrupts backups.
+
+1. Create the credentials secret, `kubernetes/longhorn/backup-target-secret.yaml` (git-ignored):
+
+   ```yaml
+   apiVersion: v1
+   kind: Secret
+   metadata:
+     name: longhorn-backup-target
+     namespace: longhorn-system
+   type: Opaque
+   stringData:
+     AWS_ACCESS_KEY_ID: <access key>
+     AWS_SECRET_ACCESS_KEY: <secret key>
+     AWS_ENDPOINTS: https://rustfs.internal.dmhosted.com
+   ```
+
+   The endpoint goes in the secret, not in the backup target URL.
+   If the endpoint certificate is not trusted by the Longhorn images, add its CA as `AWS_CERT` (PEM).
+
+1. Seal it (see [Sealed Secrets](./sealed-secrets.md)):
+
+   ```bash
+   kubeseal --controller-name sealed-secrets-controller --controller-namespace kube-system \
+     -o yaml < kubernetes/longhorn/backup-target-secret.yaml \
+     > kubernetes/longhorn/backup-target-secret-sealed.yaml
+   ```
+
+1. Set the target in [values.yaml](../kubernetes/longhorn/values.yaml):
+
+   ```yaml
+   defaultBackupStore:
+     backupTarget: s3://longhorn-backups@eu-west-1/ # trailing slash is required
+     backupTargetCredentialSecret: longhorn-backup-target
+     pollInterval: 300
+   ```
+
+   The chart writes these into the `longhorn-default-resource` ConfigMap, which longhorn-manager reconciles into the `default` BackupTarget.
+
+1. Once ArgoCD syncs, check that the target is available:
+
+   ```bash
+   kubectl -n longhorn-system get backuptargets.longhorn.io default -o jsonpath='{.status.available}'
+   ```
+
+   It should print `true`.
+   To take a backup, go to "Volume" in the UI, select the volume, and choose "Create Backup".
+   Backups show up under "Backup and Restore" > "Backups".
+
 ---
 
 ## Links
