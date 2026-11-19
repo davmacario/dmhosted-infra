@@ -6,7 +6,7 @@ controllers:
         image:
           # Deployed immich version - see https://github.com/immich-app/immich/releases
           # renovate: datasource=github-releases depName=immich-app/immich
-          tag: v3.4.1
+          tag: v3.4.2
         env:
           REDIS_HOSTNAME: '{{ printf "%s-valkey" .Release.Name }}'
           IMMICH_MACHINE_LEARNING_URL: '{{ printf "http://%s-machine-learning:3003" .Release.Name }}'
@@ -51,7 +51,7 @@ valkey:
         main:
           image:
             repository: docker.io/valkey/valkey
-            tag: 9.2-alpine@sha256:4d67e1af80c653bd46c0bbe8de438c81a6535ab5a39b22f2100028f314005663
+            tag: 9.2-alpine@sha256:c8e2d17498838af5d91e12eb7c11220b3434a7b7131a333e3af52ad5e0b80882
             pullPolicy: IfNotPresent
           resources:
             requests:
