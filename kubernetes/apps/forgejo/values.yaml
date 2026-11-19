@@ -3,7 +3,7 @@
 image:
   registry: code.forgejo.org
   repository: forgejo/forgejo
-  tag: 17.0.1
+  tag: 17.0.2
   rootless: true
 
 podSecurityContext:
