@@ -20,6 +20,12 @@ spec:
         app: sparkyfitness-backend
     spec:
       automountServiceAccountToken: false
+      securityContext: # Mirrors upstream Helm chart (node user in node:alpine)
+        runAsNonRoot: true
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch # Re-owns root-owned PVC files once
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: sparkyfitness-backend
           image: codewithcj/sparkyfitness_server:v1.12.1
@@ -46,15 +52,11 @@ spec:
                 secretKeyRef:
                   name: sparkyfitness-app-cnpg-secret
                   key: password
-            # - name: SPARKY_FITNESS_API_ENCRYPTION_KEY_FILE
-            #   value: /run/secrets/sparkyfitness_api_key
             - name: SPARKY_FITNESS_API_ENCRYPTION_KEY
               valueFrom:
                 secretKeyRef:
                   name: sparkyfitness-secrets
                   key: sparkyfitness_api_key
-            # - name: BETTER_AUTH_SECRET_FILE
-            #   value: /run/secrets/sparkyfitness_better_auth_secret
             - name: BETTER_AUTH_SECRET
               valueFrom:
                 secretKeyRef:
@@ -92,6 +94,14 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 5
             timeoutSeconds: 10
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
           resources:
             requests:
               cpu: 100m
@@ -106,13 +116,16 @@ spec:
             - mountPath: /app/SparkyFitnessServer/uploads
               subPath: uploads
               name: sparkyfitness-backend
-            - mountPath: /run/secrets
-              name: secret-files
-              readOnly: true
+            # Writable scratch dirs (root filesystem is read-only)
+            - mountPath: /app/SparkyFitnessServer/temp_uploads
+              name: temp-uploads
+            - mountPath: /tmp
+              name: tmp
       volumes:
         - name: sparkyfitness-backend
           persistentVolumeClaim:
             claimName: sparkyfitness-backend
-        - name: secret-files
-          secret:
-            secretName: sparkyfitness-secrets
+        - name: temp-uploads
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
