@@ -14,6 +14,8 @@ controllers:
           DB_HOSTNAME: immich-db-rw
           DB_DATABASE_NAME: immich
           DB_USERNAME: immich
+          # Workaround for https://github.com/immich-app/immich/issues/33466 (v3.4.2)
+          IMMICH_HOST: "0.0.0.0"
           DB_PASSWORD:
             valueFrom:
               secretKeyRef:
