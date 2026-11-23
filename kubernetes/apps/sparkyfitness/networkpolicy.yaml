@@ -72,14 +72,14 @@ spec:
               app: traefik
               instance: tailscale
       ports:
-        - port: 80
+        - port: 8080
           protocol: TCP
     # Allow liveness/readiness probes (kubelet, node network)
     - from:
         - ipBlock:
             cidr: 192.168.0.0/16
       ports:
-        - port: 80
+        - port: 8080
           protocol: TCP
   egress:
     - to:
