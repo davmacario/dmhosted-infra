@@ -150,6 +150,37 @@ To solve this, it is first required to add the following annotation:
 sealedsecrets.bitnami.com/managed: "true"
 ```
 
+### Tip: translating SealedSecret file to Secret manifest
+
+This can only be done with access to the cluster (i.e., to the private keys).
+
+2 alternatives:
+
+1. If the secret has been deployed to the cluster, just read it back and parse it / b64 decode it:
+
+   ```bash
+   kubectl -n <ns> get secret <secret-name> -o json \
+     | jq '{apiVersion, kind, type,
+            metadata: {name: .metadata.name, namespace: .metadata.namespace},
+            stringData: (.data | map_values(@base64d))}' \
+     | yq -P > decoded-secret.yaml
+   ```
+
+   See [script](../scripts/read-secret.sh)
+
+2. If the secret is not deployed, and only the sealed secret is accessible:
+
+   ```bash
+   # Get keys
+   kubectl -n kube-system get secret -l sealedsecrets.bitnami.com/sealed-secrets-key -o yaml > /tmp/sealed-keys.yaml
+
+   # Disaster recovery action
+   kubeseal --recovery-unseal --recovery-private-key /tmp/sealed-keys.yaml -o json -f my-secret-sealed.yaml \
+     | jq '{apiVersion, kind, type, metadata: {name: .metadata.name, namespace: .metadata.namespace},
+            stringData: (.data | map_values(@base64d))}' \
+     | yq -P
+   ```
+
 ### Private Keys
 
 To extract the private key(s):
