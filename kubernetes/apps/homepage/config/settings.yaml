@@ -2,7 +2,7 @@ title: dmacario's homepage
 description: Davide Macario's Homelab Homepage
 color: slate
 background:
-  image: https://w.wallhaven.cc/full/13/wallhaven-13w683.jpg
+  image: /images/homepage-background.jpeg
   blur: xs
   saturate: 50
   brightness: 50

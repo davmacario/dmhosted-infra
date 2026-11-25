@@ -67,11 +67,17 @@ spec:
             - mountPath: /app/config/widgets.yaml
               name: homepage-config
               subPath: widgets.yaml
+            - mountPath: /app/public/images/homepage-background.jpeg
+              name: homepage-assets
+              subPath: homepage-background.jpeg
             - mountPath: /app/config/logs
               name: logs
       volumes:
         - name: homepage-config
           configMap:
             name: homepage-config
+        - name: homepage-assets
+          configMap:
+            name: homepage-assets
         - name: logs
           emptyDir: {}

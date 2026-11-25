@@ -28,3 +28,6 @@ configMapGenerator:
       - config/services.yaml
       - config/settings.yaml
       - config/widgets.yaml
+  - name: homepage-assets
+    files:
+    - assets/homepage-background.jpeg
