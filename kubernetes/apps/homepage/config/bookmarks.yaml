@@ -1,0 +1,13 @@
+- Bookmarks:
+    - Github:
+        - icon: github.svg
+          href: https://github.com/davmacario/dmhosted-infra
+    - Gmail:
+        - icon: gmail.svg
+          href: https://mail.google.com/mail/u/0/#inbox
+    - Tailscale:
+        - icon: tailscale.svg
+          href: https://login.tailscale.com/admin/machines
+    - Cloudflare:
+        - icon: cloudflare.svg
+          href: https://dash.cloudflare.com/

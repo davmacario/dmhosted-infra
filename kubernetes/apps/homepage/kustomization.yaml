@@ -1,0 +1,30 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# NOTE: applied to all resources!
+namespace: homepage
+
+resources:
+  - namespace.yaml
+  - serviceaccount.yaml
+  - secret_serviceaccount.yaml
+  - clusterrole.yaml
+  - service.yaml
+  - deployment.yaml
+  - internal_cert.yaml
+  - internal_cert_2.yaml
+  - ingressroute_internal.yaml
+  - ingressroute_internal_2.yaml
+  - credentials-secret-sealed.yaml
+
+configMapGenerator:
+  - name: homepage-config
+    files:
+      - config/bookmarks.yaml
+      - config/custom.css
+      - config/custom.js
+      - config/docker.yaml
+      - config/kubernetes.yaml
+      - config/services.yaml
+      - config/settings.yaml
+      - config/widgets.yaml

@@ -11,23 +11,26 @@ tags:
 
 [Homepage](https://gethomepage.dev/) is a customizable application dashboard for your homelab.
 
-We will deploy it using Kubernetes, following the [official docs](https://gethomepage.dev/installation/k8s/).
-All YAML files are stored under [kubernetes/homepage](../kubernetes/homepage/).
+It is deployed following the [official docs](https://gethomepage.dev/installation/k8s/), and managed by Argo CD ([Application](../kubernetes/argocd-apps/homepage.yaml)).
+All manifests live under [kubernetes/apps/homepage](../kubernetes/apps/homepage/), tied together by a [Kustomization](../kubernetes/apps/homepage/kustomization.yaml).
 
-## Deploying the application
+**Note**: configure the value for `HOMEPAGE_ALLOWED_HOSTS` in the [Deployment](../kubernetes/apps/homepage/deployment.yaml) properly!
 
-What we need (in order):
+## Configuration
 
-- [ ] [Namespace](../kubernetes/homepage/01_namespace.yaml)
-- [ ] [ServiceAccount](../kubernetes/homepage/02_serviceaccount.yaml)
-- [ ] [Secret for ServiceAccount](../kubernetes/homepage/03_secret_serviceaccount.yaml)
-- [ ] [ConfigMap](../kubernetes/homepage/04_configmap.yaml)
-  - This is the configuration for the application itself (bookmarks, services, widgets are defined here!)
-- [ ] [ClusterRole and ClusterRoleBinding](../kubernetes/homepage/05_clusterrole.yaml)
-- [ ] [Service](../kubernetes/homepage/06_service.yaml)
-- [ ] [Deployment](../kubernetes/homepage/07_deployment.yaml)
-  - **Note**: configure the value for `HOMEPAGE_ALLOWED_HOSTS` properly!
-- [ ] [IngressRoute - local](../kubernetes/homepage/08_ingressroute_local.yaml)
-  - Includes cert for `homepage.local.dmhosted.com`
-- [ ] [IngressRoute - internal (Tailscale)](../kubernetes/homepage/09_ingressroute_internal.yaml)
-  - Includes cert for `homepage.internal.dmhosted.com`
+The Homepage config files (`services.yaml`, `settings.yaml`, `widgets.yaml`, ...) are plain files in [config/](../kubernetes/apps/homepage/config/).
+Kustomize turns them into the `homepage-config` ConfigMap through a `configMapGenerator`, mounted file by file under `/app/config/`.
+The generated ConfigMap name has a content hash suffix, so any config change rolls out the Deployment automatically.
+
+## Widget credentials
+
+API keys, usernames and passwords are not stored in the config files, but rather use Homepage's [environment variable substitution](https://gethomepage.dev/installation/docker/#using-environment-secrets), like so:
+
+```yaml
+widget:
+  type: argocd
+  url: https://argocd.internal.dmhosted.com/
+  key: "{{HOMEPAGE_VAR_ARGOCD_KEY}}"
+```
+
+The values are in the `homepage-credentials` Secret, loaded into the container with `envFrom`, and deployed as sealed secret.
