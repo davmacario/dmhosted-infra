@@ -35,6 +35,9 @@ spec:
           env:
             - name: HOMEPAGE_ALLOWED_HOSTS
               value: homepage.local.dmhosted.com,homepage.internal.dmhosted.com,internal.dmhosted.com
+          envFrom:
+            - secretRef:
+                name: homepage-credentials
           ports:
             - name: http
               containerPort: 3000
@@ -68,7 +71,7 @@ spec:
               name: logs
       volumes:
         - name: homepage-config
-          secret:
-            secretName: homepage-config
+          configMap:
+            name: homepage-config
         - name: logs
           emptyDir: {}

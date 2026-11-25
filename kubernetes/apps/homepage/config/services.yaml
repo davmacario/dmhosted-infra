@@ -1,0 +1,210 @@
+- Homelab:
+    - Proxmox:
+        icon: proxmox.svg
+        href: "https://pve-dmacario.taila7b4c.ts.net:8006"
+        description: PVE-dmacario
+        widget:
+          type: proxmox
+          url: "https://pve-dmacario.taila7b4c.ts.net:8006"
+          username: "{{HOMEPAGE_VAR_PROXMOX_USER}}"
+          password: "{{HOMEPAGE_VAR_PROXMOX_PASSWORD}}"
+          node: pve-dmacario
+
+    - TrueNAS:
+        icon: truenas.svg
+        href: "https://nas.internal.dmhosted.com"
+        widget:
+          type: truenas
+          url: http://192.168.178.254
+          version: 2
+          key: "{{HOMEPAGE_VAR_TRUENAS_KEY}}"
+          enablePools: true
+          nasType: scale
+
+    - ArgoCD:
+        icon: argo-cd.svg
+        href: https://argocd.internal.dmhosted.com
+        widget:
+          type: argocd
+          url: https://argocd.internal.dmhosted.com/
+          key: "{{HOMEPAGE_VAR_ARGOCD_KEY}}"
+          fields: ["apps", "synced", "outOfSync", "healthy"]
+
+    - Longhorn:
+        icon: sh-rancher-longhorn.svg
+        href: https://longhorn.internal.dmhosted.com/
+
+
+- Apps:
+    - DMHosted Blog:
+        icon: hugo.svg
+        href: https://blog.dmhosted.com/
+        description: My personal blog!
+        siteMonitor: https://blog.dmhosted.com/healthz
+    - Forgejo:
+        icon: forgejo.svg
+        href: https://forgejo.dmhosted.com/
+        description: Git Hosting
+        siteMonitor: https://forgejo.dmhosted.com/api/healthz
+        widget:
+          type: gitea
+          url: http://forgejo-http.forgejo.svc.cluster.local:3000/
+          key: "{{HOMEPAGE_VAR_FORGEJO_KEY}}"
+    - Nextcloud:
+        icon: sh-nextcloud.svg
+        href: https://nextcloud.beta2home.duckdns.org/
+        description: Nextcloud (beta2)
+        siteMonitor: https://nextcloud.beta2home.duckdns.org/heartbeat
+        widget:
+          type: nextcloud
+          url: https://nextcloud.beta2home.duckdns.org/
+          username: "{{HOMEPAGE_VAR_NEXTCLOUD_USER}}"
+          password: "{{HOMEPAGE_VAR_NEXTCLOUD_PASSWORD}}"
+    - SparkyFitness:
+        icon: sparky-fitness.png
+        href: https://sparkyfitness.internal.dmhosted.com/
+        description: Fitness tracker
+        siteMonitor: https://sparkyfitness.internal.dmhosted.com/
+        widget:
+          type: sparkyfitness
+          url: https://sparkyfitness.internal.dmhosted.com/
+          key: "{{HOMEPAGE_VAR_SPARKYFITNESS_KEY}}"
+    - Karakeep:
+        icon: karakeep.png
+        href: https://karakeep.internal.dmhosted.com/
+        description: Bookmarks manager
+        siteMonitor: https://karakeep.internal.dmhosted.com/
+        widget:
+          type: karakeep
+          url: https://karakeep.internal.dmhosted.com/
+          key: "{{HOMEPAGE_VAR_KARAKEEP_KEY}}"
+          fields: ["bookmarks", "favorites", "highlights", "lists"]
+    - Immich:
+        icon: immich.svg
+        href: https://immich.internal.dmhosted.com
+        description: Photo library
+        siteMonitor: https://immich.internal.dmhosted.com
+        widget:
+          type: immich
+          url: https://immich.internal.dmhosted.com/
+          key: "{{HOMEPAGE_VAR_IMMICH_KEY}}"
+          version: 2
+    - Firefly-III:
+        icon: sh-firefly-iii.svg
+        href: https://firefly-iii.internal.dmhosted.com/
+        description: Finance tracker
+        siteMonitor: https://firefly-iii.internal.dmhosted.com/
+    - Vaultwarden:
+        icon: bitwarden.svg
+        href: https://vaultwarden.dmhosted.com
+        description: Password manager
+        siteMonitor: https://vaultwarden.dmhosted.com
+    - Open WebUI:
+        icon: sh-open-webui.svg
+        href: https://open-webui.dmhosted.duckdns.org/
+        description: LLM UI
+        siteMonitor: https://open-webui.dmhosted.duckdns.org/
+    - IT Tools:
+        icon: sh-it-tools.svg
+        href: https://it-tools.internal.dmhosted.com/
+        description: Handy tools for IT
+        siteMonitor: https://it-tools.internal.dmhosted.com/
+    - Stirling PDF:
+        icon: stirling-pdf.svg
+        href: https://stirling-pdf.internal.dmhosted.com/
+        description: PDF tools
+        siteMonitor: https://stirling-pdf.internal.dmhosted.com/
+    - RustFS:
+        icon: rustfs.svg
+        href: https://rustfs-ui.internal.dmhosted.com/
+        description: S3-compatible storage
+        siteMonitor: https://rustfs-ui.internal.dmhosted.com/
+
+- Monitoring:
+    - Speedtest Tracker:
+        icon: speedtest-tracker.png
+        href: https://speedtest.internal.dmhosted.com/
+        widget:
+          type: speedtest
+          url: https://speedtest.internal.dmhosted.com/
+          version: 2
+          key: "{{HOMEPAGE_VAR_SPEEDTEST_KEY}}"
+
+    - Uptime Kuma - Hosts:
+        icon: uptime-kuma.svg
+        href: https://uptime-kuma.internal.dmhosted.com
+        widget:
+          type: uptimekuma
+          url: https://uptime-kuma.internal.dmhosted.com
+          slug: homepage
+
+    - Uptime Kuma - DMHosted Services:
+        icon: uptime-kuma.svg
+        href: https://uptime-kuma.internal.dmhosted.com
+        widget:
+          type: uptimekuma
+          url: https://uptime-kuma.internal.dmhosted.com
+          slug: internal-services
+
+    - Grafana:
+        icon: grafana.svg
+        href: https://grafana.internal.dmhosted.com/
+        widget:
+          type: grafana
+          version: 2
+          url: https://grafana.internal.dmhosted.com/
+          username: "{{HOMEPAGE_VAR_GRAFANA_USER}}"
+          password: "{{HOMEPAGE_VAR_GRAFANA_PASSWORD}}"
+
+- Network:
+    - AdGuardHome:
+        icon: sh-adguard-home.svg
+        href: https://adguard.internal.dmhosted.com/
+        description: DNS server (both local and on Tailscale)
+        widget:
+          type: adguard
+          fields: ["queries", "blocked", "latency"]
+          url: https://adguard.internal.dmhosted.com
+          username: "{{HOMEPAGE_VAR_ADGUARD_USER}}"
+          password: "{{HOMEPAGE_VAR_ADGUARD_PASSWORD}}"
+
+    - Router:
+        icon: si-ziggo
+        href: https://router.local.dmhosted.com/
+        description: Ziggo router (Utrecht)
+
+    - Traefik (primary instance):
+        icon: traefik-proxy.svg
+        href: https://traefik-primary.internal.dmhosted.com/
+        widget:
+          type: traefik
+          url: https://traefik-primary.internal.dmhosted.com/
+          username: "{{HOMEPAGE_VAR_TRAEFIK_PRIMARY_USER}}"
+          password: "{{HOMEPAGE_VAR_TRAEFIK_PRIMARY_PASSWORD}}"
+
+    - Traefik (Tailscale):
+        icon: traefik-proxy.svg
+        href: https://traefik.internal.dmhosted.com/
+        widget:
+          type: traefik
+          url: https://traefik.internal.dmhosted.com/
+          username: "{{HOMEPAGE_VAR_TRAEFIK_USER}}"
+          password: "{{HOMEPAGE_VAR_TRAEFIK_PASSWORD}}"
+
+    - Nginx Proxy Manager (beta2):
+        icon: nginx-proxy-manager.svg
+        href: http://beta2home.duckdns.org:81/
+        widget:
+          type: npm
+          url: http://beta2home.duckdns.org:81
+          username: "{{HOMEPAGE_VAR_NPM_BETA2_USER}}"
+          password: "{{HOMEPAGE_VAR_NPM_BETA2_PASSWORD}}"
+
+    - Nginx Proxy Manager (puppydm01):
+        icon: nginx-proxy-manager.svg
+        href: http://dmhosted.duckdns.org:81/
+        widget:
+          type: npm
+          url: http://dmhosted.duckdns.org:81
+          username: "{{HOMEPAGE_VAR_NPM_PUPPY_USER}}"
+          password: "{{HOMEPAGE_VAR_NPM_PUPPY_PASSWORD}}"

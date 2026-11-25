@@ -1,0 +1,34 @@
+title: dmacario's homepage
+description: Davide Macario's Homelab Homepage
+color: slate
+background:
+  image: https://w.wallhaven.cc/full/n6/wallhaven-n67omx.png
+  blur: md
+  saturate: 50
+  brightness: 50
+  opacity: 50
+useEqualHeights: true
+headerStyle: boxedWidgets
+statusStyle: dot
+disableIndexing: true
+providers:
+  longhorn:
+    username: "{{HOMEPAGE_VAR_LONGHORN_USER}}"
+    password: "{{HOMEPAGE_VAR_LONGHORN_PASSWORD}}"
+    url: https://longhorn.internal.dmhosted.com
+layout:
+  Bookmarks:
+    style: row
+    columns: 4
+  Homelab:
+    style: row
+    columns: 2
+  Apps:
+    style: row
+    columns: 3
+  Monitoring:
+    style: row
+    columns: 2
+  Network:
+    style: row
+    columns: 3

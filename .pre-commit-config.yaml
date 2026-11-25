@@ -49,8 +49,7 @@ repos:
           - -schema-location
           - "https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
         files: ^kubernetes/.*\.ya?ml$
-        # Helm values, kustomizations and patches are not full k8s manifests
-        exclude: (values|kustomization|-patch)\.ya?ml$
+        exclude: (values|kustomization|-patch)\.ya?ml$|^kubernetes/apps/homepage/config/
 
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.38.0
